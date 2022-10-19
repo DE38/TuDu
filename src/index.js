@@ -26,7 +26,12 @@ app.use((req, res, next) => {
 
 // ENDPOINTS
 app.get('/', (req, res) => {
-    res.status(200).send({test: "Hello World!"});
+    res.status(200).send({test: "This could be the placeholder for GET all tasks"});
+})
+
+app.get('/:id', (req, res) => {
+    const reqId = req.params.id;
+    res.status(200).send({text: `This could be the placeholder for GET task by id, id = ${reqId}`});
 })
 
 // if none of the above defined endpoints is accessed, error 404 is thrown
