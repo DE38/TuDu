@@ -32,8 +32,6 @@ app.get('/', (req, res) => {
 // if none of the above defined endpoints is accessed, error 404 is thrown
 app.use((req, res) => res.status(404).send());
 
-// if any error happens during the call process, error 500 is thrown
-app.use((err, req, res, next) => res.status(500).send());
 
 // starting the server
 app.listen(port, () => {
