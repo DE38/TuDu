@@ -3,13 +3,13 @@
         {
             "type": "docker-compose-up",
             "name": "compose up",
-            "files": ["$PROJECT_DIR$/docker-compose.yaml"],
+            "files": ["$PROJECT_DIR$/docker-compose.yml"],
             "upOptions": "--attach"
         },
         {
             "type": "docker-compose-up",
             "name": "compose up build",
-            "files": ["$PROJECT_DIR$/docker-compose.yaml"],
+            "files": ["$PROJECT_DIR$/docker-compose.yml"],
             "upOptions": "--build --attach"
         }
 
