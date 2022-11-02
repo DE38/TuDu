@@ -9,4 +9,4 @@ TuDu is the newest and most advanced ToDo-List you can imagine.
 
 Installing dependencies: `npm intall`
 
-Starting server: `node src`
+Starting server: `npm start`
