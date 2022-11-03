@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM node:16-alpine
+FROM node:10-alpine
 
 # ----------------------------
 LABEL name="Niklas Trenz"
