@@ -1,9 +1,7 @@
-# syntax=docker/dockerfile:1
 FROM node:10-alpine
 
 # ----------------------------
-LABEL name="Niklas Trenz"
-LABEL email="niklas.trenz@sap.com"
+LABEL maintainer ="Niklas Trenz <niklas.trenz@sap.com>"
 LABEL date="18.10.2022"
 # ----------------------------
 
