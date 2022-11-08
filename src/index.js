@@ -7,6 +7,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 
+const pool = require("./db.js")
+
 
 // defaults
 const port = 8080
@@ -25,13 +27,37 @@ app.use((req, res, next) => {
 });
 
 // ENDPOINTS
-app.get('/', (req, res) => {
-    res.status(200).send({test: "This could be the placeholder for GET all tasks"});
+
+//Tasks
+app.get('/api/v1/', (req, res) => {
+    res.status(200).send({test: "This is the placeholder for GET all tasks"});
 })
 
-app.get('/:id', (req, res) => {
+app.get('/api/v1/:id', (req, res) => {
     const reqId = req.params.id;
-    res.status(200).send({text: `This could be the placeholder for GET task by id, id = ${reqId}`});
+    res.status(200).send({text: `This is the placeholder for GET task by id, id = ${reqId}`});
+})
+
+app.post('/api/v1/', (req, res) => {
+    console.log("le call");
+    res.status(200).send();
+})
+
+app.patch('/api/v1/:id', (req, res) => {
+    console.log("le call");
+    res.status(200).send();
+})
+
+app.delete('/api/v1/:id', (req, res) => {
+    console.log("le call");
+    res.status(200).send();
+})
+
+
+//init DB for simpler developement
+app.post('/api/init_db', (req, res) => {
+    console.log("le call");
+    res.status(200).send();
 })
 
 // if none of the above defined endpoints is accessed, error 404 is thrown
