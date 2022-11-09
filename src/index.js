@@ -28,30 +28,37 @@ app.use((req, res, next) => {
 
 // ENDPOINTS
 
+//Hello-world
+app.get('/api/v1/', (req, res) =>{
+    res.status(200).send({text: 'Hello world!'});
+});
+
 //Tasks
-app.get('/api/v1/', (req, res) => {
+app.get('/api/v1/tasks/', (req, res) => {
     res.status(200).send({test: "This is the placeholder for GET all tasks"});
 })
 
-app.get('/api/v1/:id', (req, res) => {
+app.get('/api/v1/tasks/:id', (req, res) => {
     const reqId = req.params.id;
     res.status(200).send({text: `This is the placeholder for GET task by id, id = ${reqId}`});
 })
 
-app.post('/api/v1/', (req, res) => {
+app.post('/api/v1/tasks/', (req, res) => {
     console.log("le call");
     res.status(200).send();
 })
 
-app.patch('/api/v1/:id', (req, res) => {
+app.patch('/api/v1/tasks/:id', (req, res) => {
     console.log("le call");
     res.status(200).send();
 })
 
-app.delete('/api/v1/:id', (req, res) => {
+app.delete('/api/v1/tasks/:id', (req, res) => {
     console.log("le call");
     res.status(200).send();
 })
+
+// USERS????
 
 
 //init DB for simpler developement
