@@ -29,7 +29,7 @@ app.use((req, res, next) => {
 // ENDPOINTS
 
 //Hello-world
-app.get('/api/v1/', (req, res) =>{
+app.get('/api/v1/hello_world', (req, res) =>{
     res.status(200).send({text: 'Hello world!'});
 });
 
@@ -62,7 +62,7 @@ app.delete('/api/v1/tasks/:id', (req, res) => {
 
 
 //init DB for simpler developement
-app.post('/api/init_db', (req, res) => {
+app.post('/api/v1/init_db', (req, res) => {
     console.log("le call");
     res.status(200).send();
 })
