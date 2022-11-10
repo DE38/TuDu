@@ -59,7 +59,20 @@ app.delete('/api/v1/tasks/:id', (req, res) => {
 })
 
 // USERS????
+app.post('/api/v1/register', (req, res) =>{
+    console.log("registered user with email: ");
+    res.status(200).send();
+})
 
+app.post('/api/v1/login', (req, res) =>{
+    console.log("logged in user with email: ");
+    res.status(200).send();
+})
+
+app.get('/api/v1/logout', (req, res) =>{
+    console.log("logged out successfully");
+    res.status(200).send();
+})
 
 //init DB for simpler developement
 app.post('/api/v1/init_db', (req, res) => {
