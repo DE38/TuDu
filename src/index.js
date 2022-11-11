@@ -29,20 +29,28 @@ app.use((req, res, next) => {
 // ENDPOINTS
 
 //Hello-world
-app.get('/api/v1/hello_world', (req, res) =>{
+app.get('/api/v1/hello_world', (req, res) => {
     res.status(200).send({text: 'Hello world!'});
 });
 
 //USER
-app.post('/api/v1/register', (req, res) =>{
-    res.status(200).send({text: `This is the placeholder for register a user`});
+app.post('/api/v1/register', async (req, res) => {
+    try {
+        const {usr_name} = req.body;
+        await pool.query("CREATE TABLE Users (Id INT NOT NULL AUTO_INCREMENT,Email VARCHAR(255) NOT NULL,PWHash VARCHAR(255) NOT NULL,PRIMARY KEY (Id))");
+        res.status(200).send({text: `This is the placeholder for register a user`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
+
 })
 
-app.post('/api/v1/login', (req, res) =>{
+app.post('/api/v1/login', (req, res) => {
     res.status(200).send({text: `This is the placeholder for logging in a user`});
 })
 
-app.get('/api/v1/logout', (req, res) =>{
+app.get('/api/v1/logout', (req, res) => {
     res.status(200).send({text: `This is the placeholder for logging out a user`});
 })
 
@@ -91,9 +99,16 @@ app.delete('/api/v1/list/:id', (req, res) => {
 })
 
 //init DB for simpler developement
-app.post('/api/v1/init_db', (req, res) => {
-    console.log("le call");
-    res.status(200).send({text: `This is the placeholder for inititalizing a easy to test DB`});
+app.post('/api/v1/init_db', async (req, res) => {
+    try {
+        await pool.query("CREATE TABLE users (id integer NOT NULL AUTO_INCREMENT PRIMARY KEY ,email varchar(255) NOT NULL,pw_hash VARCHAR(255) NOT NULL)");
+        await pool.query("CREATE TABLE lists (list_id integer NOT NULL AUTO_INCREMENT PRIMARY KEY,title varchar(48) NOT NULL);");
+        await pool.query("CREATE TABLE reoccuring (reoccurringId INT NOT NULL AUTO_INCREMENT PRIMARY KEY,rule_string VARCHAR(255) NOT NULL);")
+        res.status(200).send({text: `Thank you for initializing DB today`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
 // if none of the above defined endpoints is accessed, error 404 is thrown
