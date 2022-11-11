@@ -101,6 +101,10 @@ app.delete('/api/v1/list/:id', (req, res) => {
 //init DB for simpler developement
 app.post('/api/v1/init_db', async (req, res) => {
     try {
+        await  pool.query("DROP TABLE IF EXISTS users");
+        await  pool.query("DROP TABLE IF EXISTS lists");
+        await  pool.query("DROP TABLE IF EXISTS reoccuring");
+
         await pool.query("CREATE TABLE users (user_id serial NOT NULL PRIMARY KEY ,email varchar(255) NOT NULL,pw_hash varchar(255) NOT NULL)");
         await pool.query("CREATE TABLE lists (list_id serial NOT NULL PRIMARY KEY,title varchar(48) NOT NULL);");
         await pool.query("CREATE TABLE reoccuring (reoccurring_id serial NOT NULL PRIMARY KEY,rule_string varchar(255) NOT NULL);")
