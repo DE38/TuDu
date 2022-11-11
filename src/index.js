@@ -107,8 +107,10 @@ app.post('/api/v1/init_db', async (req, res) => {
         await pool.query("DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'DROP TABLE ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;");
 
         await pool.query("CREATE TABLE users (user_id serial NOT NULL PRIMARY KEY ,email varchar(255) NOT NULL,pw_hash varchar(255) NOT NULL)");
-        await pool.query("CREATE TABLE $1_lists (list_id serial NOT NULL PRIMARY KEY,title varchar(48) NOT NULL);", [dummy]);
-        await pool.query("CREATE TABLE $1_reoccuring (reoccurring_id serial NOT NULL PRIMARY KEY,rule_string varchar(255) NOT NULL);", [dummy]);
+	const lists_name =  "dummy" + "_lists";
+        await pool.query(`CREATE TABLE ${lists_name} (list_id serial NOT NULL PRIMARY KEY,title varchar(48) NOT NULL);`);
+	const tasks_name = "dummy" + "_reoccurring";
+        await pool.query(`CREATE TABLE ${tasks_name} (reoccurring_id serial NOT NULL PRIMARY KEY,rule_string varchar(255) NOT NULL)`);
         res.status(200).send({text: `Thank you for initializing DB today`});
     } catch (err) {
         console.error(err.message);
