@@ -101,13 +101,14 @@ app.delete('/api/v1/list/:id', (req, res) => {
 //init DB for simpler developement
 app.post('/api/v1/init_db', async (req, res) => {
     try {
-        await  pool.query("DROP TABLE IF EXISTS users");
+ /*       await  pool.query("DROP TABLE IF EXISTS users");
         await  pool.query("DROP TABLE IF EXISTS lists");
-        await  pool.query("DROP TABLE IF EXISTS reoccuring");
+        await  pool.query("DROP TABLE IF EXISTS reoccuring");*/
+        await pool.query("DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'DROP TABLE ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;");
 
         await pool.query("CREATE TABLE users (user_id serial NOT NULL PRIMARY KEY ,email varchar(255) NOT NULL,pw_hash varchar(255) NOT NULL)");
-        await pool.query("CREATE TABLE lists (list_id serial NOT NULL PRIMARY KEY,title varchar(48) NOT NULL);");
-        await pool.query("CREATE TABLE reoccuring (reoccurring_id serial NOT NULL PRIMARY KEY,rule_string varchar(255) NOT NULL);")
+        await pool.query("CREATE TABLE $1_lists (list_id serial NOT NULL PRIMARY KEY,title varchar(48) NOT NULL);", [dummy]);
+        await pool.query("CREATE TABLE $1_reoccuring (reoccurring_id serial NOT NULL PRIMARY KEY,rule_string varchar(255) NOT NULL);", [dummy]);
         res.status(200).send({text: `Thank you for initializing DB today`});
     } catch (err) {
         console.error(err.message);
