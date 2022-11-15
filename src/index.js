@@ -22,11 +22,21 @@ app.use(morgan('combined'));
 
 // MIDDLEWARES
 app.use((req, res, next) => {
+    // the allow origin stuff needs to be configured correctly, up to this point I dont know how
+    cors({
+        origin: 'http://localhost:5050',
+        credentials: true
+    });
     console.log("Middleware active!");
     next();
 });
 
 // ENDPOINTS
+
+// redirect to base path
+app.get('/', (req, res) => {
+    res.redirect(301, '/api/v1/hello_world');
+});
 
 //Hello-world
 app.get('/api/v1/hello_world', (req, res) => {
