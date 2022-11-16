@@ -6,6 +6,7 @@ const pool = new Pool({
     host: "192.168.0.100",
     port: 5432,
     database: "postgres"
+
 });
 
 module.exports = pool;

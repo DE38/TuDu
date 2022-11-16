@@ -53,6 +53,7 @@ function verify(user) {
 
 // --------------------------------------------------------------------------------------
 
+
 // defaults
 const port = 8080
 
@@ -70,6 +71,7 @@ app.use((req, res, next) => {
         origin: 'http://localhost:5050',
         credentials: true
     });
+
     console.log("Middleware active!");
     next();
 });
@@ -178,6 +180,7 @@ app.post('/api/v1/init_db', async (req, res) => {
         console.error(err.message);
         res.status(500).send()
     }
+
 })
 
 // if none of the above defined endpoints is accessed, error 404 is thrown
@@ -188,3 +191,4 @@ app.use((req, res) => res.status(404).send());
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 })
+
