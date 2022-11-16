@@ -26,7 +26,7 @@ const saltRounds = 10;
 **/ 
 function hash_pwd(user) {
     bcrypt.genSalt(saltRounds, function(err, salt) {
-        bcrypt.hash(user.pwd, salt, function(err, hash) {
+        bcrypt.hash(user.password, salt, function(err, hash) {
             let credentials = [user.name, hash];
             // TODO: store in DB
             console.log(`Hash for user: ${user.name} with random salt: ${hash}`);          
@@ -46,7 +46,7 @@ const MOCK_HASH_IN_DB = "$2b$10$St3dWOhNbNtjdiDknvEncOg/CqLEm4sq02d6.wsMBs6M1qRF
 function verify(user) {
     // get requested hash from db via user.name -> user_hash
     // TODO: get user data from DB
-    bcrypt.compare(user.pwd, MOCK_HASH_IN_DB, function(err, result) {
+    bcrypt.compare(user.password, MOCK_HASH_IN_DB, function(err, result) {
         console.log(result);
     });
 };
@@ -68,7 +68,7 @@ app.use(morgan('combined'));
 app.use((req, res, next) => {
     // the allow origin stuff needs to be configured correctly, up to this point I dont know how
     cors({
-        origin: 'http://localhost:5050',
+        origin: 'http://localhost:5173',
         credentials: true
     });
 
