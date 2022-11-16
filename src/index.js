@@ -9,6 +9,49 @@ const morgan = require("morgan");
 
 const pool = require("./db.js")
 
+// --------------------------------------------------------------------------------------
+// password hashing
+
+// TODO: error handling inside hashing functions
+
+const bcrypt = require('bcrypt');
+
+const saltRounds = 10;
+
+/** 
+ *  generated a hash for this user
+ *  hash password with random salt
+ *  @param {object} user user has name and password
+ *  @return {null}
+**/ 
+function hash_pwd(user) {
+    bcrypt.genSalt(saltRounds, function(err, salt) {
+        bcrypt.hash(user.pwd, salt, function(err, hash) {
+            let credentials = [user.name, hash];
+            // TODO: store in DB
+            console.log(`Hash for user: ${user.name} with random salt: ${hash}`);          
+        });
+    });    
+};
+
+// pwd = TEST_PASSWORD
+const MOCK_HASH_IN_DB = "$2b$10$St3dWOhNbNtjdiDknvEncOg/CqLEm4sq02d6.wsMBs6M1qRFrIrue";
+
+/**
+ * verifies a user with his given name and password
+ * verify (compare) input password to in DB stored hashed password
+ * @param {object} user user has name and pwassword
+ * @return {null}
+ */
+function verify(user) {
+    // get requested hash from db via user.name -> user_hash
+    // TODO: get user data from DB
+    bcrypt.compare(user.pwd, MOCK_HASH_IN_DB, function(err, result) {
+        console.log(result);
+    });
+};
+
+// --------------------------------------------------------------------------------------
 
 // defaults
 const port = 8080
@@ -22,15 +65,34 @@ app.use(morgan('combined'));
 
 // MIDDLEWARES
 app.use((req, res, next) => {
+    // the allow origin stuff needs to be configured correctly, up to this point I dont know how
+    cors({
+        origin: 'http://localhost:5050',
+        credentials: true
+    });
     console.log("Middleware active!");
     next();
 });
 
 // ENDPOINTS
 
+// redirect to base path
+app.get('/', (req, res) => {
+    res.redirect(301, '/api/v1/hello_world');
+});
+
 //Hello-world
 app.get('/api/v1/hello_world', (req, res) => {
     res.status(200).send({text: 'Hello world!'});
+});
+
+// PASSWORD TEST
+app.post('/api/v1/test/login', (req, res) => {
+    const usr = req.body;
+    console.log(usr);
+    hash_pwd(usr);
+    verify(usr);
+    res.status(200).send();
 });
 
 //USER
