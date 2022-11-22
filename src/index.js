@@ -94,7 +94,9 @@ app.post('/api/v1/test/login', (req, res) => {
     console.log(usr);
     hash_pwd(usr);
     verify(usr);
-    res.status(200).send();
+    usr.loggedIn = true;
+    usr.login_time = Date.now();
+    res.status(200).send(usr);
 });
 
 //USER
