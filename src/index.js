@@ -105,7 +105,7 @@ app.post('/api/v1/register', async (req, res) => {
         const {email} = req.body;
         const pw_hash = "dummy hash"
         await pool.query(`INSERT INTO users(email, pw_hash) VALUES (${email}, ${pw_hash})`);
-        res.status(200).send({text: `This is the placeholder for register a user`});
+        res.status(201).send({text: `This is the placeholder for register a user`});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -115,12 +115,13 @@ app.post('/api/v1/register', async (req, res) => {
 
 app.post('/api/v1/login', async (req, res) => {
     try {
-        const {email, pw_hash} = req.body;
+        const {email, passwd} = req.body;
+        const pw_hash = "dummy hash"
         const pw_hash_from_db = await pool.query(`SELECT pw_hash FROM users WHERE email = ${email}`);
         if(pw_hash === pw_hash_from_db){
             await pool.query(`UPDATE users SET auth_token = "auth_test_token" WHERE email = ${email}`);
             await pool.query(`UPDATE users SET refresh_token = "refresh_test_token" WHERE email = ${email}`);
-            res.status(200).send({text: `The user has been authentificated. Your Tokens are in the response body.`});
+            res.status(200).json({text: `The user has been authentificated. Your Tokens are in the response body.`, auth_token: "auth_test_token", refresh_token: "refresh_test_token"});
         } else {
             res.status(401).send();
         }
@@ -260,7 +261,7 @@ app.post('/api/v1/init_db', async (req, res) => {
         await  pool.query("DROP TABLE IF EXISTS reoccuring");*/
         await pool.query("DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'DROP TABLE ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;");
 
-        await pool.query("CREATE TABLE users (user_id serial NOT NULL PRIMARY KEY ,email varchar(255) NOT NULL UNIQUE,pw_hash varchar(255) NOT NULL, auth_token varchar(255), refresh_token varchar(255))");
+        await pool.query("CREATE TABLE users (user_id serial PRIMARY KEY ,email varchar(255) NOT NULL UNIQUE,pw_hash varchar(255) NOT NULL, auth_token varchar(255), refresh_token varchar(255))");
 	const lists_name =  "dummy" + "_lists";
         await pool.query(`CREATE TABLE ${lists_name} (list_id serial NOT NULL PRIMARY KEY,title varchar(48) NOT NULL);`);
 	const tasks_name = "dummy" + "_reoccurring";
