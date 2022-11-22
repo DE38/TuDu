@@ -112,56 +112,135 @@ app.post('/api/v1/register', async (req, res) => {
 
 })
 
-app.post('/api/v1/login', (req, res) => {
-    res.status(200).send({text: `This is the placeholder for logging in a user`});
+app.post('/api/v1/login', async (req, res) => {
+    try {
+        const {usr_name, pw_hash} = req.body;
+        await pool.query("");
+        res.status(200).send({text: `This is the placeholder for logging in a user`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
-app.get('/api/v1/logout', (req, res) => {
-    res.status(200).send({text: `This is the placeholder for logging out a user`});
+app.get('/api/v1/logout', async (req, res) => {
+    try {
+        await pool.query("");
+        res.status(200).send({text: `This is the placeholder for logging out a user`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
 //Tasks
-app.get('/api/v1/tasks/', (req, res) => {
-    res.status(200).send({test: "This is the placeholder for read all tasks"});
+app.get('/api/v1/tasks/', async (req, res) => {
+    try {
+        await pool.query("");
+        res.status(200).send({test: "This is the placeholder for read all tasks"});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
-app.get('/api/v1/tasks/:id', (req, res) => {
-    const reqId = req.params.id;
-    res.status(200).send({text: `This is the placeholder for read task by id, id = ${reqId}`});
+app.get('/api/v1/tasks/:id', async (req, res) => {
+    try {
+        await pool.query("");
+        const reqId = req.params.id;
+        res.status(200).send({text: `This is the placeholder for read task by id, id = ${reqId}`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
-app.post('/api/v1/tasks/', (req, res) => {
-    res.status(200).send({text: `This is the placeholder for read all tasks`});
+app.post('/api/v1/tasks/', async (req, res) => {
+    try {
+        await pool.query("");
+        res.status(200).send({text: `This is the placeholder for read all tasks`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
-app.patch('/api/v1/tasks/:id', (req, res) => {
-    res.status(200).send({text: `This is the placeholder for update task by id`});
+app.patch('/api/v1/tasks/:id', async (req, res) => {
+    try {
+        const {usr_name} = req.body;
+        await pool.query("");
+        res.status(200).send({text: `This is the placeholder for update task by id`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
-app.delete('/api/v1/tasks/:id', (req, res) => {
-    res.status(200).send({text: `This is the placeholder for delete task by id`});
+app.delete('/api/v1/tasks/:id', async (req, res) => {
+    try {
+        const {usr_name} = req.body;
+        await pool.query("");
+        res.status(200).send({text: `This is the placeholder for delete task by id`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
 //Lists
-app.get('/api/v1/list/', (req, res) => {
-    res.status(200).send({test: "This is the placeholder for list all tasks"});
+app.get('/api/v1/list/', async (req, res) => {
+    try {
+        const {usr_name} = req.body;
+        await pool.query("");
+        res.status(200).send({test: "This is the placeholder for list all tasks"});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
-app.get('/api/v1/list/:id', (req, res) => {
-    const reqId = req.params.id;
-    res.status(200).send({text: `This is the placeholder for read list by id, id = ${reqId}`});
+app.get('/api/v1/list/:id', async (req, res) => {
+    try {
+        const {usr_name} = req.body;
+        await pool.query("");
+        res.status(200).send({text: `This is the placeholder for register a user`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
-app.post('/api/v1/list/', (req, res) => {
-    res.status(200).send({text: `This is the placeholder for read all lists`});
+app.post('/api/v1/list/', async (req, res) => {
+    try {
+        const {usr_name} = req.body;
+        await pool.query("");
+        res.status(200).send({text: `This is the placeholder for read all lists`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
-app.patch('/api/v1/list/:id', (req, res) => {
-    res.status(200).send({text: `This is the placeholder for update list by id`});
+app.patch('/api/v1/list/:id', async (req, res) => {
+    try {
+        const {usr_name} = req.body;
+        await pool.query("");
+        res.status(200).send({text: `This is the placeholder for update list by id`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
-app.delete('/api/v1/list/:id', (req, res) => {
-    res.status(200).send({text: `This is the placeholder for delete list by id`});
+app.delete('/api/v1/list/:id', async (req, res) => {
+    try {
+        const {usr_name} = req.body;
+        await pool.query("");
+        res.status(200).send({text: `This is the placeholder for delete list by id`});
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send()
+    }
 })
 
 //init DB for simpler developement
