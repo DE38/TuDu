@@ -105,6 +105,11 @@ app.post('/api/v1/register', async (req, res) => {
         const {email} = req.body;
         const pw_hash = "dummy hash"
         await pool.query(`INSERT INTO users(email, pw_hash) VALUES (${email}, ${pw_hash})`);
+        const tasks_list = email + "_tasks"
+        const reoccuring_list = email + "_reoccurring"
+        await pool.query(`CREATE TABLE ${tasks_list}(list_id serial PRIMARY KEY,title varchar(48) NOT NULL)`);
+        await pool.query(`CREATE TABLE ${reoccuring_list}(reoccurring_id serial PRIMARY KEY,rule_string varchar(255) NOT NULL)`);
+
         res.status(201).send({text: `This is the placeholder for register a user`});
     } catch (err) {
         console.error(err.message);
