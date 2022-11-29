@@ -3,9 +3,12 @@
 // libraries
 const express = require("express");
 const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+
+const jwt = require("jsonwebtoken");
 
 const pool = require("./db.js")
 
@@ -60,6 +63,7 @@ const port = 8080
 const app = express();
 app.use(helmet());
 app.use(bodyParser.json());
+app.use(cookieParser())
 app.use(cors());
 app.use(morgan('combined'));
 
@@ -75,6 +79,8 @@ app.use((req, res, next) => {
     console.log("Middleware active!");
     next();
 });
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 
 // ENDPOINTS
 
@@ -99,18 +105,28 @@ app.post('/api/v1/test/login', (req, res) => {
     res.status(200).send(usr);
 });
 
+// REQ BODY TEST
+app.post('/api/v1/test/body', (req, res) => {
+    const {email} = req.body;
+    res.status(200);
+    res.json({text: email});
+})
+
+// RES COOKIE TEST
+app.get('/api/v1/test/cookie', (req, res) => {
+    res.status(200);
+    res.cookie('test_cookie_1', 'test_data_1');
+    res.cookie('test_cookie_2', 'test_data_2');
+    res.json({text: 'Cookies set :)'})
+})
+
 //USER
 app.post('/api/v1/register', async (req, res) => {
     try {
-        const {email} = req.body;
-        const pw_hash = "dummy hash"
-        await pool.query(`INSERT INTO users(email, pw_hash) VALUES (${email}, ${pw_hash})`);
-        const tasks_list = email + "_tasks"
-        const reoccuring_list = email + "_reoccurring"
-        await pool.query(`CREATE TABLE ${tasks_list}(list_id serial PRIMARY KEY,title varchar(48) NOT NULL)`);
-        await pool.query(`CREATE TABLE ${reoccuring_list}(reoccurring_id serial PRIMARY KEY,rule_string varchar(255) NOT NULL)`);
-
-        res.status(201).send({text: `This is the placeholder for register a user`});
+        let {email, passwd} = req.body;
+        await pool.query('INSERT INTO users (email, pw_hash) VALUES ($1, $2)', [email, passwd]);
+        res.status(201);
+        res.send({text: `You have been registered!`});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -121,14 +137,19 @@ app.post('/api/v1/register', async (req, res) => {
 app.post('/api/v1/login', async (req, res) => {
     try {
         const {email, passwd} = req.body;
-        const pw_hash = "dummy hash"
-        const pw_hash_from_db = await pool.query(`SELECT pw_hash FROM users WHERE email = ${email}`);
-        if(pw_hash === pw_hash_from_db){
-            await pool.query(`UPDATE users SET auth_token = "auth_test_token" WHERE email = ${email}`);
-            await pool.query(`UPDATE users SET refresh_token = "refresh_test_token" WHERE email = ${email}`);
-            res.status(200).json({text: `The user has been authentificated. Your Tokens are in the response body.`, auth_token: "auth_test_token", refresh_token: "refresh_test_token"});
+        const pw_hash_from_db = (await pool.query('SELECT pw_hash FROM users WHERE email = $1', [email])).rows[0].pw_hash;
+        console.log("body: " + passwd);
+        console.log("DB: " + pw_hash_from_db);
+        if(passwd == pw_hash_from_db){
+            await pool.query('UPDATE users SET auth_token = $1 WHERE email = $2', ['auth_test_token', email]);
+            await pool.query('UPDATE users SET refresh_token = $1 WHERE email = $2', ['refresh_test_token', email]);
+            res.status(200);
+            res.cookie('auth_token', 'auth_test_token');
+            res.cookie('refresh_token', 'refresh_test_token');
+            res.json({text: `The user has been authentificated. Your Tokens are in the sent cookies.`});
         } else {
-            res.status(401).send();
+            res.status(401);
+            res.send();
         }
 
 
@@ -141,8 +162,8 @@ app.post('/api/v1/login', async (req, res) => {
 app.get('/api/v1/logout', async (req, res) => {
     const {email} = req.body;
     try {
-        await pool.query(`UPDATE users SET auth_token = null WHERE email = ${email}`);
-        await pool.query(`UPDATE users SET refresh_token = null WHERE email = ${email}`)
+        await pool.query('UPDATE users SET auth_token = null WHERE email = $1', [email]);
+        await pool.query('UPDATE users SET refresh_token = null WHERE email = $1', [email])
         res.status(200).send({text: `This is the placeholder for logging out a user`});
     } catch (err) {
         console.error(err.message);
@@ -155,11 +176,12 @@ app.get('/api/v1/tasks/', async (req, res) => {
     const {email} = req.body;
     list_name = email + "_tasks";
     try {
-        await pool.query(`SELECT * from ${list_name}`);
+        await pool.query('SELECT * from $1', [list_name]);
         res.status(200).send({test: "This is the placeholder for read all tasks"});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
+
     }
 })
 
@@ -168,11 +190,11 @@ app.get('/api/v1/tasks/:id', async (req, res) => {
         const {email} = req.body;
         list_name = email + "_tasks";
         const reqId = req.params.id;
-        await pool.query(`SELECT * from ${list_name} WHERE task_id = '${reqId}'`);
+        await pool.query('SELECT * from $2 WHERE task_id = $2', [list_name, reqId]);
         res.status(200).send({text: `This is the placeholder for read task by id, id = ${reqId}`});
     } catch (err) {
         console.error(err.message);
-        res.status(500).send()
+        res.status(500).send();
     }
 })
 
@@ -180,7 +202,7 @@ app.post('/api/v1/tasks/', async (req, res) => {
     try {
         const {email, title} = req.body;
         list_name = email + "_tasks";
-        await pool.query(`INSERT INTO ${list_name} (title) VALUES ('${title}')`);
+        await pool.query('INSERT INTO $1 (title) VALUES ($2)', [list_name, title]);
         res.status(200).send({text: `This is the placeholder for read all tasks`});
     } catch (err) {
         console.error(err.message);
@@ -193,7 +215,7 @@ app.patch('/api/v1/tasks/:id', async (req, res) => {
         const {email, title} = req.body;
         list_name = email + "_tasks";
         const reqId = req.params.id;
-        await pool.query(`UPDATE ${list_name} SET title '${title}' WHERE task_id = '${reqId}'`);
+        await pool.query('UPDATE $1 SET title $2 WHERE task_id = $3', [list_name, title, reqId]);
         res.status(200).send({text: `This is the placeholder for update task by id`});
     } catch (err) {
         console.error(err.message);
@@ -206,7 +228,7 @@ app.delete('/api/v1/tasks/:id', async (req, res) => {
         const {email, title} = req.body;
         list_name = email + "_tasks";
         const reqId = req.params.id;
-        await pool.query(`DELETE FROM ${list_name} WHERE task_id = '${reqId}'`);
+        await pool.query('DELETE FROM $1 WHERE task_id = $2', [list_name, reqId]);
         res.status(200).send({text: `This is the placeholder for delete task by id`});
     } catch (err) {
         console.error(err.message);
@@ -219,7 +241,7 @@ app.get('/api/v1/list/', async (req, res) => {
     try {
         const {email} = req.body;
         list_name = email + "_reoccurring";
-        await pool.query(`SELECT * from ${list_name}`);
+        await pool.query('SELECT * from $1', [list_name]);
         res.status(200).send({test: "This is the placeholder for list all tasks"});
     } catch (err) {
         console.error(err.message);
@@ -232,7 +254,7 @@ app.get('/api/v1/list/:id', async (req, res) => {
         const {email} = req.body;
         const reqId = req.params.id;
         list_name = email + "_reoccurring";
-        await pool.query(`SELECT * from ${list_name} WHERE reoccurring_id = '${reqId}'`);
+        await pool.query('SELECT * from $1 WHERE reoccurring_id = $2', [list_name, reqId]);
         res.status(200).send({text: `This is the placeholder for get a single reoccuring`});
     } catch (err) {
         console.error(err.message);
@@ -244,7 +266,7 @@ app.post('/api/v1/list/', async (req, res) => {
     try {
         const {email, rule_string} = req.body;
         list_name = email + "_reoccurring";
-        await pool.query(`INSERT INTO ${list_name} (rule_string) VALUES ('${rule_string}')`);
+        await pool.query('INSERT INTO $1 (rule_string) VALUES ($2))', [list_name, rule_string]);
         res.status(200).send({text: `This is the placeholder for read all reoccurings`});
     } catch (err) {
         console.error(err.message);
@@ -257,7 +279,7 @@ app.patch('/api/v1/list/:id', async (req, res) => {
         const {email, rule_string} = req.body;
         list_name = email + "_reoccurring";
         const reqId = req.params.id;
-        await pool.query(`UPDATE ${list_name} SET rule_string = '${rule_string}' WHERE reoccurring_id = '${reqId}'`);
+        await pool.query(`UPDATE $1 SET rule_string = $2 WHERE reoccurring_id = $3`, [list_name, rule_string, reqId]);
         res.status(200).send({text: `This is the placeholder for update reoccuring by id`});
     } catch (err) {
         console.error(err.message);
@@ -270,7 +292,7 @@ app.delete('/api/v1/list/:id', async (req, res) => {
         const {email} = req.body;
         list_name = email + "_reoccurring";
         const reqId = req.params.id;
-        await pool.query(`DELETE FROM ${list_name} WHERE reoccurring_id = '${reqId}'`);
+        await pool.query('DELETE FROM $1 WHERE reoccurring_id = $2', [list_name, reqId]);
         res.status(200).send({text: `This is the placeholder for delete reoccuring by id`});
     } catch (err) {
         console.error(err.message);
@@ -287,10 +309,9 @@ app.post('/api/v1/init_db', async (req, res) => {
         await pool.query("DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'DROP TABLE ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;");
 
         await pool.query("CREATE TABLE users (user_id serial PRIMARY KEY ,email varchar(255) NOT NULL UNIQUE,pw_hash varchar(255) NOT NULL, auth_token varchar(255), refresh_token varchar(255))");
-	const tasks_list =  "dummy" + "_tasks";
-        await pool.query(`CREATE TABLE ${tasks_list}(list_id serial PRIMARY KEY,title varchar(48) NOT NULL);`);
-	const reoccuring_list = "dummy" + "_reoccurring";
-        await pool.query(`CREATE TABLE ${reoccuring_list}(reoccurring_id serial PRIMARY KEY,rule_string varchar(255) NOT NULL)`);
+        await pool.query(`CREATE TABLE tasks(owner_email varchar(256), list_id serial PRIMARY KEY,title varchar(48) NOT NULL);`);
+        await  pool.query(`CREATE INDEX email_index ON tasks(owner_email)`);
+        await pool.query(`CREATE TABLE reoccurring(owner_email varchar(256), reoccurring_id serial PRIMARY KEY,rule_string varchar(255) NOT NULL)`);
         res.status(200).send({text: `Thank you for initializing DB today`});
     } catch (err) {
         console.error(err.message);

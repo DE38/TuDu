@@ -10,5 +10,3 @@ const pool = new Pool({
 });
 
 module.exports = pool;
-
-//     host: "192.168.0.100",
