@@ -76,7 +76,7 @@ app.use((req, res, next) => {
         credentials: true
     });
 
-    console.log("Middleware active!");
+//    console.log("Middleware active!");
     next();
 });
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -124,7 +124,15 @@ app.get('/api/v1/test/cookie', (req, res) => {
 app.post('/api/v1/register', async (req, res) => {
     try {
         let {email, passwd} = req.body;
-        await pool.query('INSERT INTO users (email, pw_hash) VALUES ($1, $2)', [email, passwd]);
+        try {
+            await pool.query('INSERT INTO users (email, pw_hash) VALUES ($1, $2)', [email, passwd]);
+        } catch {
+            res.status(400);
+            res.send({text: `this email has already been registered!`});
+        }
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]); //TODO remove
+        const id = idResponse.rows[0].user_id;
+
         res.status(201);
         res.send({text: `You have been registered!`});
     } catch (err) {
@@ -164,7 +172,7 @@ app.get('/api/v1/logout', async (req, res) => {
     try {
         await pool.query('UPDATE users SET auth_token = null WHERE email = $1', [email]);
         await pool.query('UPDATE users SET refresh_token = null WHERE email = $1', [email])
-        res.status(200).send({text: `This is the placeholder for logging out a user`});
+        res.status(200).send({text: `You have been logged out. Your JWTs are now invalid.`});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -172,11 +180,12 @@ app.get('/api/v1/logout', async (req, res) => {
 })
 
 //Tasks
-app.get('/api/v1/tasks/', async (req, res) => {
-    const {email} = req.body;
-    list_name = email + "_tasks";
+app.get('/api/v1/tasks/', async (req, res) => { //TODO BUG
     try {
-        await pool.query('SELECT * from $1', [list_name]);
+        const {email} = req.body;
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
+        await pool.query('SELECT * from tasks WHERE user_id = $1', [userId]);
         res.status(200).send({test: "This is the placeholder for read all tasks"});
     } catch (err) {
         console.error(err.message);
@@ -188,9 +197,10 @@ app.get('/api/v1/tasks/', async (req, res) => {
 app.get('/api/v1/tasks/:id', async (req, res) => {
     try {
         const {email} = req.body;
-        list_name = email + "_tasks";
         const reqId = req.params.id;
-        await pool.query('SELECT * from $2 WHERE task_id = $2', [list_name, reqId]);
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
+        const queryResponse = await pool.query('SELECT * from tasks WHERE task_id = $1 AND user_id = $2', [reqId, userId]);
         res.status(200).send({text: `This is the placeholder for read task by id, id = ${reqId}`});
     } catch (err) {
         console.error(err.message);
@@ -201,9 +211,10 @@ app.get('/api/v1/tasks/:id', async (req, res) => {
 app.post('/api/v1/tasks/', async (req, res) => {
     try {
         const {email, title} = req.body;
-        list_name = email + "_tasks";
-        await pool.query('INSERT INTO $1 (title) VALUES ($2)', [list_name, title]);
-        res.status(200).send({text: `This is the placeholder for read all tasks`});
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
+        await pool.query('INSERT INTO tasks (title, user_id) VALUES ($1, $2)', [title, userId]);
+        res.status(200).send({text: `A task has been created succesfully.`});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -213,10 +224,11 @@ app.post('/api/v1/tasks/', async (req, res) => {
 app.patch('/api/v1/tasks/:id', async (req, res) => {
     try {
         const {email, title} = req.body;
-        list_name = email + "_tasks";
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        await pool.query('UPDATE $1 SET title $2 WHERE task_id = $3', [list_name, title, reqId]);
-        res.status(200).send({text: `This is the placeholder for update task by id`});
+        await pool.query('UPDATE tasks SET title = $1 WHERE user_id = $2 AND task_id = $3', [title, userId, reqId]);
+        res.status(200).send({text: `A Task has been updated successfully.`});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -226,10 +238,11 @@ app.patch('/api/v1/tasks/:id', async (req, res) => {
 app.delete('/api/v1/tasks/:id', async (req, res) => {
     try {
         const {email, title} = req.body;
-        list_name = email + "_tasks";
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        await pool.query('DELETE FROM $1 WHERE task_id = $2', [list_name, reqId]);
-        res.status(200).send({text: `This is the placeholder for delete task by id`});
+        await pool.query('DELETE FROM tasks WHERE user_id = $1 AND task_id = $2', [userId, reqId]);
+        res.status(200).send({text: `A Task has been deleted successfully.`});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -240,8 +253,9 @@ app.delete('/api/v1/tasks/:id', async (req, res) => {
 app.get('/api/v1/list/', async (req, res) => {
     try {
         const {email} = req.body;
-        list_name = email + "_reoccurring";
-        await pool.query('SELECT * from $1', [list_name]);
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
+        await pool.query('SELECT * from reoccurring WHERE user_id = $1', [userId]);
         res.status(200).send({test: "This is the placeholder for list all tasks"});
     } catch (err) {
         console.error(err.message);
@@ -252,9 +266,10 @@ app.get('/api/v1/list/', async (req, res) => {
 app.get('/api/v1/list/:id', async (req, res) => {
     try {
         const {email} = req.body;
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        list_name = email + "_reoccurring";
-        await pool.query('SELECT * from $1 WHERE reoccurring_id = $2', [list_name, reqId]);
+        await pool.query('SELECT * from reoccurring WHERE user_id = $1 AND reoccurring_id = $2', [userId, reqId]);
         res.status(200).send({text: `This is the placeholder for get a single reoccuring`});
     } catch (err) {
         console.error(err.message);
@@ -265,9 +280,10 @@ app.get('/api/v1/list/:id', async (req, res) => {
 app.post('/api/v1/list/', async (req, res) => {
     try {
         const {email, rule_string} = req.body;
-        list_name = email + "_reoccurring";
-        await pool.query('INSERT INTO $1 (rule_string) VALUES ($2))', [list_name, rule_string]);
-        res.status(200).send({text: `This is the placeholder for read all reoccurings`});
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
+        await pool.query('INSERT INTO reoccurring (user_id, rule_string) VALUES ($1, $2)', [userId, rule_string]);
+        res.status(200).send({text: `This is the placeholder for creating a reoccuring.`});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -277,10 +293,11 @@ app.post('/api/v1/list/', async (req, res) => {
 app.patch('/api/v1/list/:id', async (req, res) => {
     try {
         const {email, rule_string} = req.body;
-        list_name = email + "_reoccurring";
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        await pool.query(`UPDATE $1 SET rule_string = $2 WHERE reoccurring_id = $3`, [list_name, rule_string, reqId]);
-        res.status(200).send({text: `This is the placeholder for update reoccuring by id`});
+        await pool.query(`UPDATE reoccurring SET rule_string = $1 WHERE user_id = $2 AND reoccurring_id = $3`, [rule_string, userId, reqId]);
+        res.status(200).send({text: `This is the placeholder for updating a reoccuring.`});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -290,10 +307,11 @@ app.patch('/api/v1/list/:id', async (req, res) => {
 app.delete('/api/v1/list/:id', async (req, res) => {
     try {
         const {email} = req.body;
-        list_name = email + "_reoccurring";
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        await pool.query('DELETE FROM $1 WHERE reoccurring_id = $2', [list_name, reqId]);
-        res.status(200).send({text: `This is the placeholder for delete reoccuring by id`});
+        await pool.query('DELETE FROM reoccurring WHERE user_id = $1 AND reoccurring_id = $2', [userId, reqId]);
+        res.status(200).send({text: `This is the placeholder for deleting a reoccuring by id`});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -303,15 +321,13 @@ app.delete('/api/v1/list/:id', async (req, res) => {
 //init DB for simpler developement
 app.post('/api/v1/init_db', async (req, res) => {
     try {
- /*       await  pool.query("DROP TABLE IF EXISTS users");
-        await  pool.query("DROP TABLE IF EXISTS lists");
-        await  pool.query("DROP TABLE IF EXISTS reoccuring");*/
         await pool.query("DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'DROP TABLE ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;");
 
         await pool.query("CREATE TABLE users (user_id serial PRIMARY KEY ,email varchar(255) NOT NULL UNIQUE,pw_hash varchar(255) NOT NULL, auth_token varchar(255), refresh_token varchar(255))");
-        await pool.query(`CREATE TABLE tasks(owner_email varchar(256), list_id serial PRIMARY KEY,title varchar(48) NOT NULL);`);
-        await  pool.query(`CREATE INDEX email_index ON tasks(owner_email)`);
-        await pool.query(`CREATE TABLE reoccurring(owner_email varchar(256), reoccurring_id serial PRIMARY KEY,rule_string varchar(255) NOT NULL)`);
+        await pool.query(`CREATE TABLE tasks(user_id varchar(256), task_id serial PRIMARY KEY,title varchar(48) NOT NULL);`);
+        await pool.query(`CREATE INDEX email_index_tasks ON tasks(user_id)`);
+        await pool.query(`CREATE TABLE reoccurring(user_id varchar(256), reoccurring_id serial PRIMARY KEY,rule_string varchar(255) NOT NULL)`);
+        await pool.query(`CREATE INDEX email_index_reoccuring ON reoccurring(user_id)`);
         res.status(200).send({text: `Thank you for initializing DB today`});
     } catch (err) {
         console.error(err.message);
