@@ -31,7 +31,7 @@ module.exports = app.post('/v1/register', async (req, res) => {
 
 })
 
-module.exports = app.post('/api/v1/login', async (req, res) => {
+module.exports = app.post('/v1/login', async (req, res) => {
     try {
         const {email, passwd} = req.body;
         const pw_hash_from_db = (await pool.query('SELECT pw_hash FROM users WHERE email = $1', [email])).rows[0].pw_hash;
