@@ -36,6 +36,10 @@ module.exports = app.post('/v1/register', async (req, res) => {
 module.exports = app.post('/v1/login', async (req, res) => {
     try {
         const {email, passwd} = req.body;
+        if (email === undefined || passwd === undefined){
+            res.status(400);
+            res.send({text: `email or password is missing`});
+        }
         const pw_hash_from_db = (await pool.query('SELECT pw_hash FROM users WHERE email = $1', [email])).rows[0].pw_hash;
         if(bcrypt.compare(passwd, pw_hash_from_db)){
             await pool.query('UPDATE users SET auth_token = $1 WHERE email = $2', ['auth_test_token', email]);
@@ -48,8 +52,6 @@ module.exports = app.post('/v1/login', async (req, res) => {
             res.status(401);
             res.send();
         }
-
-
     } catch (err) {
         console.error(err.message);
         res.status(500).send()

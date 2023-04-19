@@ -1,7 +1,6 @@
 const express = require('express')
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const cors = require("cors");
 
 const pool = require("./db.js")
 
@@ -12,11 +11,6 @@ app.use(cookieParser());
 
 // MIDDLEWARES
 app.use(async (req, res, next) => {
-    // the allow origin stuff needs to be configured correctly, up to this point I dont know how
-    cors({
-        origin: 'http://localhost:5173',
-        credentials: true
-    });
     try {
         const {email} = req.body;
         const auth_token_req = req.cookies['auth_token'];
