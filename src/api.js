@@ -20,10 +20,10 @@ app.use(async (req, res, next) => {
             console.error('wrong login credentials')
             res.status(400).send({text: 'Your access token is invalid'});
         }
+        next();
     } catch {
         console.error('No matching credentials found. Ensure you are registered and logged in.');
     }
-    next();
 });
 
 
@@ -39,6 +39,18 @@ module.exports = app.get('/v1/logout', async (req, res) => {
         console.error(err.message);
         res.status(500).send()
     }
+})
+
+module.exports = app.get('/v1/getUser', async (req, res) => {
+    // const auth_token_req = req.cookies['auth_token'];
+    // try {
+    //     const email = (await pool.query('SELECT email FROM users WHERE auth_token = $1', [auth_token_req])).rows[0].auth_token;
+    //     res.status(200).send({ email: `${email}`});
+    // } catch (err) {
+    //     console.error("HERE", err.message);
+    //     res.status(500).send();
+    // }
+    res.status(200).send({ email: 'Niklas' });
 })
 
 //Tasks
