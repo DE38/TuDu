@@ -15,7 +15,7 @@ app.use(async (req, res, next) => {
         const {email} = req.body;
         const auth_token_req = req.cookies['auth_token'];
         const auth_token_db = (await pool.query('SELECT auth_token FROM users WHERE email = $1', [email])).rows[0].auth_token;
-        console.log(auth_token_db + ";" + auth_token_req)
+//        console.log(auth_token_db + ";" + auth_token_req)
         if(auth_token_db != auth_token_req) {
             console.error('wrong login credentials')
             res.status(400).send({text: 'Your access token is invalid'});
@@ -49,8 +49,9 @@ module.exports = app.get('/v1/tasks/', async (req, res) => { //TODO BUG
         const {email} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        await pool.query('SELECT * from tasks WHERE user_id = $1', [userId]);
-        res.status(200).send({test: "This is the placeholder for read all tasks"});
+        const queryResponse = await pool.query('SELECT * from tasks WHERE user_id = $1', [userId]);
+        res.status(200).send({tasks: queryResponse.rows});
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -65,7 +66,11 @@ module.exports = app.get('/v1/tasks/:id', async (req, res) => {
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const queryResponse = await pool.query('SELECT * from tasks WHERE task_id = $1 AND user_id = $2', [reqId, userId]);
-        res.status(200).send({text: `This is the placeholder for read task by id, id = ${reqId}`});
+        if (queryResponse.rowCount === 1) {
+            res.status(200).send({task: queryResponse.rows[0]});
+        } else {
+            res.status(500).send({text: 'could not find a task matching this ID'});
+        }
     } catch (err) {
         console.error(err.message);
         res.status(500).send();
@@ -77,8 +82,12 @@ module.exports = app.post('/v1/tasks/', async (req, res) => {
         const {email, title} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        await pool.query('INSERT INTO tasks (title, user_id) VALUES ($1, $2)', [title, userId]);
-        res.status(200).send({text: `A task has been created succesfully.`});
+        const queryResponse = await pool.query('INSERT INTO tasks (title, user_id) VALUES ($1, $2)', [title, userId]);
+        if (queryResponse.rowCount === 1) {
+            res.status(201).send({text: `A task has been created succesfully.`});
+        } else {
+            res.status(500).send({text: `Internal server error, task could not be created`});
+        }
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -91,8 +100,12 @@ module.exports = app.patch('/v1/tasks/:id', async (req, res) => {
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        await pool.query('UPDATE tasks SET title = $1 WHERE user_id = $2 AND task_id = $3', [title, userId, reqId]);
-        res.status(200).send({text: `A Task has been updated successfully.`});
+        const queryResponse = await pool.query('UPDATE tasks SET title = $1 WHERE user_id = $2 AND task_id = $3', [title, userId, reqId]);
+        if (queryResponse.rowCount===1){
+            res.status(200).send({text: `The task has been updated successfully.`});
+        } else {
+            res.status(500).send({text: 'could not find a task matching this ID'});
+        }
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -105,8 +118,13 @@ module.exports = app.delete('/v1/tasks/:id', async (req, res) => {
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        await pool.query('DELETE FROM tasks WHERE user_id = $1 AND task_id = $2', [userId, reqId]);
-        res.status(200).send({text: `A Task has been deleted successfully.`});
+        const queryResponse = await pool.query('DELETE FROM tasks WHERE user_id = $1 AND task_id = $2', [userId, reqId]);
+        if (queryResponse.rowCount===1){
+            res.status(200).send({text: `A Task has been deleted successfully.`});
+        } else {
+            res.status(500).send({text: 'could not find a task matching this ID'});
+        }
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -119,8 +137,8 @@ module.exports = app.get('/v1/list/', async (req, res) => {
         const {email} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        await pool.query('SELECT * from reoccurring WHERE user_id = $1', [userId]);
-        res.status(200).send({test: "This is the placeholder for list all tasks"});
+        const queryResponse = await pool.query('SELECT * from reoccurring WHERE user_id = $1', [userId]);
+        res.status(200).send({lists: queryResponse.rows});
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -133,11 +151,15 @@ module.exports = app.get('/v1/list/:id', async (req, res) => {
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        await pool.query('SELECT * from reoccurring WHERE user_id = $1 AND reoccurring_id = $2', [userId, reqId]);
-        res.status(200).send({text: `This is the placeholder for get a single reoccuring`});
-    } catch (err) {
+        const queryResponse = await pool.query('SELECT * from reoccurring WHERE user_id = $1 AND reoccurring_id = $2', [userId, reqId]);
+        if (queryResponse.rowCount === 1){
+            res.status(200).send({list: queryResponse.rows[0]});
+        } else {
+            res.status(400).send({text: 'no list found with that id.'});
+        }
+        } catch (err) {
         console.error(err.message);
-        res.status(500).send()
+        res.status(500).send();
     }
 })
 
@@ -146,8 +168,12 @@ module.exports = app.post('/v1/list/', async (req, res) => {
         const {email, rule_string} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        await pool.query('INSERT INTO reoccurring (user_id, rule_string) VALUES ($1, $2)', [userId, rule_string]);
-        res.status(200).send({text: `This is the placeholder for creating a reoccuring.`});
+        const queryResponse = await pool.query('INSERT INTO reoccurring (user_id, rule_string) VALUES ($1, $2)', [userId, rule_string]);
+        if (queryResponse.rowCount === 1){
+            res.status(201).send({text: `list has been created`});
+        } else {
+            res.status(400).send({text: 'no list found with that id'});
+        }
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -160,8 +186,12 @@ module.exports = app.patch('/v1/list/:id', async (req, res) => {
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        await pool.query(`UPDATE reoccurring SET rule_string = $1 WHERE user_id = $2 AND reoccurring_id = $3`, [rule_string, userId, reqId]);
-        res.status(200).send({text: `This is the placeholder for updating a reoccuring.`});
+        const queryResponse = await pool.query(`UPDATE reoccurring SET rule_string = $1 WHERE user_id = $2 AND reoccurring_id = $3`, [rule_string, userId, reqId]);
+        if (queryResponse.rowCount === 1){
+            res.status(200).send({text: `list has been updated`});
+        } else {
+            res.status(400).send({text: 'no list found with that id'});
+        }
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
@@ -174,8 +204,12 @@ module.exports = app.delete('/v1/list/:id', async (req, res) => {
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        await pool.query('DELETE FROM reoccurring WHERE user_id = $1 AND reoccurring_id = $2', [userId, reqId]);
-        res.status(200).send({text: `This is the placeholder for deleting a reoccuring by id`});
+        const queryResponse = await pool.query('DELETE FROM reoccurring WHERE user_id = $1 AND reoccurring_id = $2', [userId, reqId]);
+        if (queryResponse.rowCount === 1){
+            res.status(200).send({text: `list has been deleted`});
+        } else {
+            res.status(400).send({text: 'no list found with that id'});
+        }
     } catch (err) {
         console.error(err.message);
         res.status(500).send()

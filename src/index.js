@@ -39,11 +39,11 @@ app.get('/', (req, res) => {
 
 
 //reset DB for simpler developement, to be removed after developement
-app.post('/api/v1/reset_db', async (req, res) => {
+app.post('/tools/v1/reset_db', async (req, res) => {
     try {
         await pool.query("DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'DROP TABLE ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;");
 
-        await pool.query("CREATE TABLE users (user_id serial PRIMARY KEY ,email varchar(255) NOT NULL UNIQUE,pw_hash varchar(255) NOT NULL, auth_token varchar(255), refresh_token varchar(255))");
+        await pool.query("CREATE TABLE users (user_id serial UNIQUE PRIMARY KEY ,email varchar(255) NOT NULL UNIQUE,pw_hash varchar(255) NOT NULL, auth_token varchar(255), refresh_token varchar(255))");
         await pool.query(`CREATE TABLE tasks(user_id varchar(256), task_id serial PRIMARY KEY,title varchar(48) NOT NULL);`);
         await pool.query(`CREATE INDEX email_index_tasks ON tasks(user_id)`);
         await pool.query(`CREATE TABLE reoccurring(user_id varchar(256), reoccurring_id serial PRIMARY KEY,rule_string varchar(255) NOT NULL)`);
@@ -64,7 +64,7 @@ app.use((req, res) => res.status(404).send());
 app.listen(port, async () => {
 
     try {
-        await pool.query("CREATE TABLE IF NOT EXISTS users (user_id serial PRIMARY KEY ,email varchar(255) NOT NULL UNIQUE,pw_hash varchar(255) NOT NULL, auth_token varchar(255), refresh_token varchar(255))");
+        await pool.query("CREATE TABLE IF NOT EXISTS users (user_id serial UNIQUE PRIMARY KEY ,email varchar(255) NOT NULL UNIQUE,pw_hash varchar(255) NOT NULL, auth_token varchar(255), refresh_token varchar(255))");
         await pool.query(`CREATE TABLE IF NOT EXISTS tasks(user_id varchar(256), task_id serial PRIMARY KEY,title varchar(48) NOT NULL);`);
         await pool.query(`CREATE INDEX IF NOT EXISTS email_index_tasks ON tasks(user_id)`);
         await pool.query(`CREATE TABLE IF NOT EXISTS reoccurring(user_id varchar(256), reoccurring_id serial PRIMARY KEY,rule_string varchar(255) NOT NULL)`);
