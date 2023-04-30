@@ -60,7 +60,7 @@ module.exports = app.get('/v1/tasks/:id', async (req, res) => {
     }
 })
 
-module.exports = app.post('/v1/tasks/', async (req, res) => {
+module.exports = app.post('/v1/tasks/', async (req, res) => { //TODO reoccuring rule option
     try {
         const {email, title} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);

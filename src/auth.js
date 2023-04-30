@@ -82,17 +82,17 @@ module.exports = app.post('/v1/login', async (req, res) => {
     }
 })
 
-module.exports = app.get('/v1/logout', async (req, res) => {
-    const {email} = req.body;
-    try {
-        await pool.query('UPDATE users SET auth_token = null WHERE email = $1', [email]);
-        await pool.query('UPDATE users SET refresh_token = null WHERE email = $1', [email])
-        res.status(200).send({text: `You have been logged out. Your JWTs are now invalid.`});
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send()
-    }
-})
+//module.exports = app.get('/v1/logout', async (req, res) => { //TODO decide on what to do here
+//    const {email} = req.body;
+//    try {
+//        await pool.query('UPDATE users SET auth_token = null WHERE email = $1', [email]);
+//        await pool.query('UPDATE users SET refresh_token = null WHERE email = $1', [email])
+//        res.status(200).send({text: `You have been logged out. Your JWTs are now invalid.`});
+//    } catch (err) {
+//        console.error(err.message);
+//        res.status(500).send()
+//    }
+//})
 
 module.exports = app.post('/v1/jwttest', async (req, res) => { //TODO to be removed for final submission
     const user = {
