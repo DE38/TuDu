@@ -1,6 +1,7 @@
 const express = require('express')
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken")
 
 const pool = require("./db.js")
 
@@ -11,19 +12,15 @@ app.use(cookieParser());
 
 // MIDDLEWARES
 app.use(async (req, res, next) => {
+    const {token} = req.body;
+    const decodedToken = jwt.decode(token);
+    const email = decodedToken.auth.email.email
+    const privateKey = (await pool.query('SELECT private_key FROM users WHERE email = $1', [email])).rows[0].private_key
     try {
-        const {email} = req.body;
-        const auth_token_req = req.cookies['auth_token'];
-        const auth_token_db = (await pool.query('SELECT auth_token FROM users WHERE email = $1', [email])).rows[0].auth_token;
-//        console.log(auth_token_db + ";" + auth_token_req)
-        if(auth_token_db != auth_token_req) {
-            console.error('wrong login credentials')
-            res.status(400).send({text: 'Your access token is invalid'});
-        }
-        next();
-    } catch {
-        res.status(500).send({text: 'Internal Server Error'});
-        console.error('No matching credentials found. Ensure you are registered and logged in.');
+        const verify_res = jwt.verify(token, privateKey)
+        next()
+    } catch (e) {
+        res.status(401).send('Invalid JWT signature');
     }
 });
 
@@ -114,7 +111,7 @@ module.exports = app.patch('/v1/tasks/:id', async (req, res) => {
 
 module.exports = app.delete('/v1/tasks/:id', async (req, res) => {
     try {
-        const {email, title} = req.body;
+        const {email, title} = req.body; //TODO perhaps check for title as well
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
@@ -131,13 +128,13 @@ module.exports = app.delete('/v1/tasks/:id', async (req, res) => {
     }
 })
 
-//Lists/ reoccuring
+//Lists
 module.exports = app.get('/v1/list/', async (req, res) => {
     try {
         const {email} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        const queryResponse = await pool.query('SELECT * from reoccurring WHERE user_id = $1', [userId]);
+        const queryResponse = await pool.query('SELECT * from list WHERE user_id = $1', [userId]);
         res.status(200).send({lists: queryResponse.rows});
     } catch (err) {
         console.error(err.message);
@@ -151,7 +148,7 @@ module.exports = app.get('/v1/list/:id', async (req, res) => {
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        const queryResponse = await pool.query('SELECT * from reoccurring WHERE user_id = $1 AND reoccurring_id = $2', [userId, reqId]);
+        const queryResponse = await pool.query('SELECT * from list WHERE user_id = $1 AND list_id = $2', [userId, reqId]);
         if (queryResponse.rowCount === 1){
             res.status(200).send({list: queryResponse.rows[0]});
         } else {
@@ -165,10 +162,10 @@ module.exports = app.get('/v1/list/:id', async (req, res) => {
 
 module.exports = app.post('/v1/list/', async (req, res) => {
     try {
-        const {email, rule_string} = req.body;
+        const {email, list_name} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        const queryResponse = await pool.query('INSERT INTO reoccurring (user_id, rule_string) VALUES ($1, $2)', [userId, rule_string]);
+        const queryResponse = await pool.query('INSERT INTO list (user_id, list_name) VALUES ($1, $2)', [userId, list_name]);
         if (queryResponse.rowCount === 1){
             res.status(201).send({text: `list has been created`});
         } else {
@@ -182,11 +179,11 @@ module.exports = app.post('/v1/list/', async (req, res) => {
 
 module.exports = app.patch('/v1/list/:id', async (req, res) => {
     try {
-        const {email, rule_string} = req.body;
+        const {email, list_name} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        const queryResponse = await pool.query(`UPDATE reoccurring SET rule_string = $1 WHERE user_id = $2 AND reoccurring_id = $3`, [rule_string, userId, reqId]);
+        const queryResponse = await pool.query(`UPDATE list SET list_name = $1 WHERE user_id = $2 AND list_id = $3`, [list_name, userId, reqId]);
         if (queryResponse.rowCount === 1){
             res.status(200).send({text: `list has been updated`});
         } else {
@@ -204,7 +201,7 @@ module.exports = app.delete('/v1/list/:id', async (req, res) => {
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.id;
-        const queryResponse = await pool.query('DELETE FROM reoccurring WHERE user_id = $1 AND reoccurring_id = $2', [userId, reqId]);
+        const queryResponse = await pool.query('DELETE FROM list WHERE user_id = $1 AND list_id = $2', [userId, reqId]);
         if (queryResponse.rowCount === 1){
             res.status(200).send({text: `list has been deleted`});
         } else {
