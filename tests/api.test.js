@@ -20,8 +20,6 @@ describe('GET /v1/tasks', function() {
     
     
     it('make the right SQL queries', async () => {
-
-        
       let fakeMethod = sinon.fake((param1, param2) => {
           if (param1 === 'SELECT user_id from users WHERE email = $1' && JSON.stringify(param2) === JSON.stringify(['test@gmail.com'])){
               return(
