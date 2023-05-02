@@ -2,6 +2,8 @@ const express = require('express')
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken")
+const JWTmiddleware = require("./jwt_auth_middleware")
+
 
 const pool = require("./db.js")
 
@@ -9,21 +11,7 @@ const app = express()
 
 app.use(bodyParser.json());
 app.use(cookieParser());
-
-// MIDDLEWARES
-app.use(async (req, res, next) => {
-    const {token} = req.body;
-    const decodedToken = jwt.decode(token);
-    const email = decodedToken.auth.email.email
-    const privateKey = (await pool.query('SELECT private_key FROM users WHERE email = $1', [email])).rows[0].private_key
-    try {
-        const verify_res = jwt.verify(token, privateKey)
-        next();
-    } catch (e) {
-        res.status(401).send('Invalid JWT signature');
-    }
-});
-
+app.use(JWTmiddleware);
 
 
 //Tasks
@@ -198,3 +186,24 @@ module.exports = app.delete('/v1/list/:id', async (req, res) => {
         res.status(500).send()
     }
 })
+
+/*
+
+async function JWTmiddleware(req, res, next) {
+    let token = null;
+    let privateKey = null;
+    try {
+        token = req.body.token;
+        const decodedToken = jwt.decode(token);
+        const email = decodedToken.auth.email.email
+        privateKey = (await pool.query('SELECT private_key FROM users WHERE email = $1', [email])).rows[0].private_key
+        try {
+            const verify_res = jwt.verify(token, privateKey)
+            next();
+        } catch (e) {
+            res.status(401).send('Invalid JWT signature');
+        }
+    } catch (e) {
+        res.status(401).send('no JWT found in the request body.')
+    }
+} */

@@ -1,4 +1,4 @@
-FROM node:10-alpine
+FROM node:20
 
 # ----------------------------
 LABEL maintainer ="Niklas Trenz <niklas.trenz@sap.com>"
