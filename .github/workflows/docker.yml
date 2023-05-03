@@ -1,0 +1,9 @@
+name: Build Docker Container
+on: push
+jobs:
+  test:
+    runs-on: ubunutu-latest
+    steps:
+      - uses: isbang/compose-action@v1.4.1
+      - name: Build Backend
+        run: docker compose up --build
