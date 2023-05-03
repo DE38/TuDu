@@ -15,6 +15,7 @@ const api = require("./api.js")
 const pool = require("./db.js")
 
 
+
 // defaults
 const port = 8080
 
@@ -30,6 +31,7 @@ app.use('/auth', auth);
 app.use('/api', api)
 
 
+
 // ENDPOINTS
 
 // redirect to base path
@@ -40,6 +42,7 @@ app.get('/', (req, res) => {
 
 //reset DB for simpler developement, to be removed after developement
 app.post('/tools/v1/reset_db', async (req, res) => {
+
     try {
         await pool.query("DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'DROP TABLE ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;");
 
@@ -49,6 +52,7 @@ app.post('/tools/v1/reset_db', async (req, res) => {
         await pool.query(`CREATE TABLE list(user_id varchar(256), list_id serial PRIMARY KEY,list_name   varchar(255) NOT NULL)`);
         await pool.query(`CREATE INDEX email_index_list ON list(user_id)`);
         res.status(200).send({text: `Thank you for resetting DB today`});
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
