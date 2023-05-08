@@ -105,7 +105,7 @@ module.exports = app.delete('/v1/tasks/:id', async (req, res) => {
 //Lists
 module.exports = app.get('/v1/list/', async (req, res) => {
     try {
-        const email = req.headers.email;
+        const email = req.body.email;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const queryResponse = await pool.query('SELECT * from list WHERE user_id = $1', [userId]);

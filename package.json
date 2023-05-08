@@ -35,5 +35,8 @@
     "sha3": "^2.1.4",
     "sinon": "^15.0.4",
     "supertest": "^6.3.3"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^7.6.0"
   }
 }
