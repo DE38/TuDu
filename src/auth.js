@@ -122,4 +122,3 @@ module.exports = app.post('/v1/jwtecho', async  (req, res) => {
         res.status(401).send('Invalid JWT signature');
     }
 })
-
