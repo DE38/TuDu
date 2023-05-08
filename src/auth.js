@@ -122,14 +122,3 @@ module.exports = app.post('/v1/jwtecho', async  (req, res) => {
         res.status(401).send('Invalid JWT signature');
     }
 })
-
-module.exports = app.post('/v1/getUser', async (req, res) => {
-    const {auth_token} = req.body;
-    try {
-        const email = (await pool.query('SELECT email FROM users WHERE auth_token = $1', [auth_token])).rows[0].email;
-        res.status(200).send({ email: `${email}`});
-    } catch (err) {
-        console.error("HERE", err.message);
-        res.status(500).send();
-    }
-})
