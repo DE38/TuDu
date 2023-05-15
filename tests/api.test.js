@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const api = require("../src/api");
 const JWTmiddleware = require("../src/jwt_auth_middleware")
 const pool = require("../src/db")
-const createRandomItem = require("./generateMockData/model.item");
+const createRandomItem = require("./generateMockData/item.model");
 
 // mock middleware to circumvent authentication
 const originalMiddleware = api._router.stack.find(layer => layer.handle === JWTmiddleware).handle;
