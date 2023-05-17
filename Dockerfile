@@ -1,8 +1,8 @@
 FROM node:20
 
 # ----------------------------
-LABEL maintainer ="Niklas Trenz <niklas.trenz@sap.com>"
-LABEL date="18.10.2022"
+LABEL maintainer = "Karl Mörtzschky <eiklautdaten@icloud.com>"
+LABEL date="17.05.2023"
 # ----------------------------
 
 # wollen wir das prod lassen?
