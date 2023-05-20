@@ -31,6 +31,13 @@ app.use('/auth', auth);
 app.use('/api', api)
 
 
+// QUERIES
+
+const USERS = "users (user_id serial UNIQUE PRIMARY KEY, email varchar(255) NOT NULL UNIQUE, pw_hash varchar(255) NOT NULL, private_key varchar(5000))";
+const TASKS = `tasks(user_id varchar(256) NOT NULL, task_id serial NOT NULL, list_id serial NOT NULL, title varchar(48) NOT NULL, reoccuring_rule varchar(16), isEditable BOOLEAN, isCompleted BOOLEAN, dueDate DATE NOT NULL DEFAULT CURRENT_DATE, creationDate DATE NOT NULL DEFAULT CURRENT_DATE, contents varchar(256), 
+PRIMARY KEY (user_id, task_id, list_id))`;
+const LIST = `list(user_id varchar(256) NOT NULL, list_id serial NOT NULL, list_name varchar(255) NOT NULL,
+PRIMARY KEY (user_id, list_id))`;
 
 // ENDPOINTS
 
@@ -46,12 +53,12 @@ app.post('/tools/v1/reset_db', async (req, res) => {
     try {
         await pool.query("DO $$ DECLARE r RECORD; BEGIN FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP EXECUTE 'DROP TABLE ' || quote_ident(r.tablename) || ' CASCADE'; END LOOP; END $$;");
 
-        await pool.query("CREATE TABLE users (user_id serial UNIQUE PRIMARY KEY ,email varchar(255) NOT NULL UNIQUE,pw_hash varchar(255) NOT NULL, private_key varchar(5000))");
-        await pool.query(`CREATE TABLE tasks(user_id varchar(256), task_id serial PRIMARY KEY,title varchar(48) NOT NULL, reoccuring_rule varchar(16));`);
+        await pool.query("CREATE TABLE " + USERS);
+        await pool.query("CREATE TABLE " + TASKS);
         await pool.query(`CREATE INDEX email_index_tasks ON tasks(user_id)`);
-        await pool.query(`CREATE TABLE list(user_id varchar(256), list_id serial PRIMARY KEY,list_name   varchar(255) NOT NULL)`);
+        await pool.query("CREATE TABLE " + LIST);
         await pool.query(`CREATE INDEX email_index_list ON list(user_id)`);
-        res.status(200).send({text: `Thank you for resetting DB today`});
+        res.status(200).send({ text: `Thank you for resetting DB today` });
 
     } catch (err) {
         console.error(err.message);
@@ -68,13 +75,13 @@ app.use((req, res) => res.status(404).send());
 app.listen(port, async () => {
 
     try {
-        await pool.query("CREATE TABLE IF NOT EXISTS users (user_id serial UNIQUE PRIMARY KEY ,email varchar(255) NOT NULL UNIQUE,pw_hash varchar(255) NOT NULL, private_key varchar(5000))");
-        await pool.query(`CREATE TABLE IF NOT EXISTS tasks(user_id varchar(256), task_id serial PRIMARY KEY,title varchar(48) NOT NULL, reoccuring_rule varchar(16));`);
+        await pool.query("CREATE TABLE IF NOT EXISTS " + USERS);
+        await pool.query(`CREATE TABLE IF NOT EXISTS ` + TASKS);
         await pool.query(`CREATE INDEX IF NOT EXISTS email_index_tasks ON tasks(user_id)`);
-        await pool.query(`CREATE TABLE IF NOT EXISTS list(user_id varchar(256), list_id serial UNIQUE PRIMARY KEY,list_name varchar(255) NOT NULL)`);
+        await pool.query(`CREATE TABLE IF NOT EXISTS ` + LIST);
         await pool.query(`CREATE INDEX IF NOT EXISTS email_index_list ON list(user_id)`);
         console.log(`Thank you for initializing DB today`);
-    } catch (err){
+    } catch (err) {
         console.log(err)
     }
     console.log(`Server listening on port ${port}`);
