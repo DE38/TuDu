@@ -15,8 +15,6 @@ app.use(JWTmiddleware);
 
 
 //Tasks
-
-// Get all tasks by USER_ID
 module.exports = app.get('/v1/tasks/', async (req, res) => { //TODO BUG
     try {
         const {email} = req.body;
@@ -24,36 +22,21 @@ module.exports = app.get('/v1/tasks/', async (req, res) => { //TODO BUG
         const userId = idResponse.rows[0].user_id;
         const queryResponse = await pool.query('SELECT * from tasks WHERE user_id = $1', [userId]);
         res.status(200).send({tasks: queryResponse.rows});
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
+
     }
 })
 
-// Get all tasks by LIST_ID
-module.exports = app.get('/v1/list/:list_id/tasks/', async (req, res) => { //TODO BUG
+module.exports = app.get('/v1/tasks/:id', async (req, res) => {
     try {
         const {email} = req.body;
-        const listId = req.params.list_id;
+        const reqId = req.params.id;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        const queryResponse = await pool.query('SELECT * from tasks WHERE user_id = $1 AND list_id = $2', [userId, listId]);
-        res.status(200).send({tasks: queryResponse.rows});
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send()
-    }
-})
-
-// Get single task of list
-module.exports = app.get('/v1/list/:list_id/task/:task_id', async (req, res) => {
-    try {
-        const {email} = req.body;
-        const taskId = req.params.task_id;
-        const listId = req.params.list_id;
-        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
-        const userId = idResponse.rows[0].user_id;
-        const queryResponse = await pool.query('SELECT * from tasks WHERE task_id = $1 AND user_id = $2 AND list_id = $3', [taskId, userId, listId]);
+        const queryResponse = await pool.query('SELECT * from tasks WHERE task_id = $1 AND user_id = $2', [reqId, userId]);
         if (queryResponse.rowCount === 1) {
             res.status(200).send({task: queryResponse.rows[0]});
         } else {
@@ -65,14 +48,12 @@ module.exports = app.get('/v1/list/:list_id/task/:task_id', async (req, res) => 
     }
 })
 
-// Create new Task
 module.exports = app.post('/v1/tasks/', async (req, res) => { //TODO reoccuring rule option
     try {
-        const {email, title, list_id, isEditable, isCompleted, dueDate, contents} = req.body;
+        const {email, title} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        // TODO: check if list exists
-        const queryResponse = await pool.query('INSERT INTO tasks (user_id, list_id, title, isEditable, isCompleted, dueDate, contents) VALUES ($1, $2, $3, $4, $5, $6, $7)', [userId, list_id, title, isEditable, isCompleted, dueDate, contents]);
+        const queryResponse = await pool.query('INSERT INTO tasks (title, user_id) VALUES ($1, $2)', [title, userId]);
         if (queryResponse.rowCount === 1) {
             res.status(201).send({text: `A task has been created succesfully.`});
         } else {
@@ -84,15 +65,13 @@ module.exports = app.post('/v1/tasks/', async (req, res) => { //TODO reoccuring 
     }
 })
 
-// Update single Task by task and list ID
-module.exports = app.patch('/v1/list/:list_id/task/:task_id', async (req, res) => {
+module.exports = app.patch('/v1/tasks/:id', async (req, res) => {
     try {
-        const {email, title, isCompleted, dueDate, contents} = req.body;
+        const {email, title} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        const taskId = req.params.task_id;
-        const listId = req.params.list_id;
-        const queryResponse = await pool.query('UPDATE tasks SET title = $4, isCompleted = $5, dueDate = $6, contents = $7 WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, title, isCompleted, dueDate, contents]);
+        const reqId = req.params.id;
+        const queryResponse = await pool.query('UPDATE tasks SET title = $1 WHERE user_id = $2 AND task_id = $3', [title, userId, reqId]);
         if (queryResponse.rowCount===1){
             res.status(200).send({text: `The task has been updated successfully.`});
         } else {
@@ -104,15 +83,13 @@ module.exports = app.patch('/v1/list/:list_id/task/:task_id', async (req, res) =
     }
 })
 
-// Delete task by task and list ID
-module.exports = app.delete('/v1/list/:list_id/task/:task_id', async (req, res) => {
+module.exports = app.delete('/v1/tasks/:id', async (req, res) => {
     try {
-        const {email} = req.body; //TODO perhaps check for title as well
+        const {email, title} = req.body; //TODO perhaps check for title as well
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        const taskId = req.params.task_id;
-        const listId = req.params.list_id;
-        const queryResponse = await pool.query('DELETE FROM tasks WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId]);
+        const reqId = req.params.id;
+        const queryResponse = await pool.query('DELETE FROM  WHERE user_id = $1 AND task_id = $2', [userId, reqId]);
         if (queryResponse.rowCount===1){
             res.status(200).send({text: `A Task has been deleted successfully.`});
         } else {
@@ -126,8 +103,6 @@ module.exports = app.delete('/v1/list/:list_id/task/:task_id', async (req, res) 
 })
 
 //Lists
-
-// Get all lists of user
 module.exports = app.get('/v1/list/', async (req, res) => {
     try {
         const email = req.body.email;
@@ -141,15 +116,13 @@ module.exports = app.get('/v1/list/', async (req, res) => {
     }
 })
 
-// Get single list by list ID
-module.exports = app.get('/v1/lists/:list_id', async (req, res) => {
+module.exports = app.get('/v1/list/:id', async (req, res) => {
     try {
         const email = req.headers.email;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        const listId = req.params.list_id;
-        console.log(listId);
-        const queryResponse = await pool.query('SELECT * from list WHERE user_id = $1 AND list_id = $2', [userId, listId]);
+        const reqId = req.params.id;
+        const queryResponse = await pool.query('SELECT * from list WHERE user_id = $1 AND list_id = $2', [userId, reqId]);
         if (queryResponse.rowCount === 1){
             res.status(200).send({list: queryResponse.rows[0]});
         } else {
@@ -161,7 +134,6 @@ module.exports = app.get('/v1/lists/:list_id', async (req, res) => {
     }
 })
 
-// Create new list
 module.exports = app.post('/v1/list/', async (req, res) => {
     try {
         const {email, list_name} = req.body;
@@ -179,13 +151,12 @@ module.exports = app.post('/v1/list/', async (req, res) => {
     }
 })
 
-// Update list by list ID
-module.exports = app.patch('/v1/list/:list_id', async (req, res) => {
+module.exports = app.patch('/v1/list/:id', async (req, res) => {
     try {
         const {email, list_name} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        const reqId = req.params.list_id;
+        const reqId = req.params.id;
         const queryResponse = await pool.query(`UPDATE list SET list_name = $1 WHERE user_id = $2 AND list_id = $3`, [list_name, userId, reqId]);
         if (queryResponse.rowCount === 1){
             res.status(200).send({text: `list has been updated`});
@@ -198,13 +169,12 @@ module.exports = app.patch('/v1/list/:list_id', async (req, res) => {
     }
 })
 
-// Delete list by list ID
-module.exports = app.delete('/v1/list/:list_id', async (req, res) => {
+module.exports = app.delete('/v1/list/:id', async (req, res) => {
     try {
         const {email} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        const reqId = req.params.list_id;
+        const reqId = req.params.id;
         const queryResponse = await pool.query('DELETE FROM list WHERE user_id = $1 AND list_id = $2', [userId, reqId]);
         if (queryResponse.rowCount === 1){
             res.status(200).send({text: `list has been deleted`});
