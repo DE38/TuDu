@@ -18,6 +18,8 @@ let email, token;
 app.use((req, res, next) => {
     try {
         token = req.headers['token'];
+        if (!token)
+            token = req.body.token;
         const decodedToken = jwt.decode(token);
         email = decodedToken.auth.email.email
     } catch (e) {
@@ -82,8 +84,12 @@ module.exports = app.post('/v1/tasks/', async (req, res) => { //TODO reoccuring 
         const {title, list_id, isEditable, isCompleted, dueDate, contents} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        // TODO: check if list exists
-        const queryResponse = await pool.query('INSERT INTO tasks (user_id, list_id, title, isEditable, isCompleted, dueDate, contents) VALUES ($1, $2, $3, $4, $5, $6, $7)', [userId, list_id, title, isEditable, isCompleted, dueDate, contents]);
+        
+        if (!dueDate) {
+            const queryResponse = await pool.query('INSERT INTO tasks (user_id, list_id, title, isEditable, isCompleted, contents) VALUES ($1, $2, $3, $4, $5, $6)', [userId, list_id, title, isEditable, isCompleted, contents]);
+        } else {
+            const queryResponse = await pool.query('INSERT INTO tasks (user_id, list_id, title, isEditable, isCompleted, dueDate, contents) VALUES ($1, $2, $3, $4, $5, $6, $7)', [userId, list_id, title, isEditable, isCompleted, dueDate, contents]);
+        }
         if (queryResponse.rowCount === 1) {
             res.status(201).send({text: `A task has been created succesfully.`});
         } else {
