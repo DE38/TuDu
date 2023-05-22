@@ -43,13 +43,14 @@ const USERS = `users (
 
 const TASKS = `tasks (
     user_id integer NOT NULL, 
-    task_id serial NOT NULL, 
+    task_id serial UNIQUE, 
     list_id integer NOT NULL, 
     title varchar(48) NOT NULL, 
     reoccuring_rule varchar(16), 
-    isEditable BOOLEAN, isCompleted BOOLEAN,
-    dueDate DATE NOT NULL DEFAULT CURRENT_DATE, 
-    creationDate DATE NOT NULL DEFAULT CURRENT_DATE, 
+    isEditable BOOLEAN, 
+    isCompleted BOOLEAN,
+    dueDate DATE DEFAULT CURRENT_DATE, 
+    creationDate DATE DEFAULT CURRENT_DATE, 
     contents varchar(256), 
     PRIMARY KEY (user_id, task_id, list_id),
     CONSTRAINT link_user
@@ -66,7 +67,7 @@ const TASKS = `tasks (
 
 const LIST = `list (
     user_id integer NOT NULL, 
-    list_id serial NOT NULL UNIQUE, 
+    list_id serial UNIQUE, 
     list_name varchar(255) NOT NULL,
     PRIMARY KEY (user_id, list_id),
     CONSTRAINT link_user
