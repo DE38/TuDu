@@ -14,6 +14,7 @@ async function JWTmiddleware(req, res, next) {
         privateKey = (await pool.query('SELECT private_key FROM users WHERE email = $1', [email])).rows[0].private_key
         try {
             const verify_res = jwt.verify(token, privateKey)
+            req.body.email = email
             next();
         } catch (e) {
             res.status(401).send('Invalid JWT signature');
