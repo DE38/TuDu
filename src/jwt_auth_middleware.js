@@ -7,7 +7,7 @@ async function JWTmiddleware(req, res, next) {
     try {
         token = req.body.token;
         if (!token) {
-            token = req.headers['token'];
+            token = req.headers['authorization'].substring(7);
         }
         const decodedToken = jwt.decode(token);
         const email = decodedToken.auth.email.email
