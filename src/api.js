@@ -13,13 +13,26 @@ app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(JWTmiddleware);
 
+let email, token;
+
+app.use((req, res, next) => {
+    try {
+        token = req.headers['token'];
+        const decodedToken = jwt.decode(token);
+        email = decodedToken.auth.email.email
+    } catch (e) {
+        res.status(401).send(`error: ${e}`);
+    }
+    
+    next();
+})
+
 
 //Tasks
 
 // Get all tasks by USER_ID
 module.exports = app.get('/v1/tasks/', async (req, res) => { //TODO BUG
     try {
-        const {email} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const queryResponse = await pool.query('SELECT * from tasks WHERE user_id = $1', [userId]);
@@ -33,7 +46,6 @@ module.exports = app.get('/v1/tasks/', async (req, res) => { //TODO BUG
 // Get all tasks by LIST_ID
 module.exports = app.get('/v1/list/:list_id/tasks/', async (req, res) => { //TODO BUG
     try {
-        const {email} = req.body;
         const listId = req.params.list_id;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
@@ -48,7 +60,6 @@ module.exports = app.get('/v1/list/:list_id/tasks/', async (req, res) => { //TOD
 // Get single task of list
 module.exports = app.get('/v1/list/:list_id/task/:task_id', async (req, res) => {
     try {
-        const {email} = req.body;
         const taskId = req.params.task_id;
         const listId = req.params.list_id;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
@@ -68,7 +79,7 @@ module.exports = app.get('/v1/list/:list_id/task/:task_id', async (req, res) => 
 // Create new Task
 module.exports = app.post('/v1/tasks/', async (req, res) => { //TODO reoccuring rule option
     try {
-        const {email, title, list_id, isEditable, isCompleted, dueDate, contents} = req.body;
+        const {title, list_id, isEditable, isCompleted, dueDate, contents} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         // TODO: check if list exists
@@ -87,7 +98,7 @@ module.exports = app.post('/v1/tasks/', async (req, res) => { //TODO reoccuring 
 // Update single Task by task and list ID
 module.exports = app.patch('/v1/list/:list_id/task/:task_id', async (req, res) => {
     try {
-        const {email, title, isCompleted, dueDate, contents} = req.body;
+        const {title, isCompleted, dueDate, contents} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const taskId = req.params.task_id;
@@ -107,7 +118,7 @@ module.exports = app.patch('/v1/list/:list_id/task/:task_id', async (req, res) =
 // Delete task by task and list ID
 module.exports = app.delete('/v1/list/:list_id/task/:task_id', async (req, res) => {
     try {
-        const {email} = req.body; //TODO perhaps check for title as well
+        //TODO perhaps check for title as well
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const taskId = req.params.task_id;
@@ -130,7 +141,6 @@ module.exports = app.delete('/v1/list/:list_id/task/:task_id', async (req, res) 
 // Get all lists of user
 module.exports = app.get('/v1/list/', async (req, res) => {
     try {
-        const email = req.body.email;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const queryResponse = await pool.query('SELECT * from list WHERE user_id = $1', [userId]);
@@ -142,13 +152,11 @@ module.exports = app.get('/v1/list/', async (req, res) => {
 })
 
 // Get single list by list ID
-module.exports = app.get('/v1/lists/:list_id', async (req, res) => {
+module.exports = app.get('/v1/list/:list_id', async (req, res) => {
     try {
-        const email = req.headers.email;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const listId = req.params.list_id;
-        console.log(listId);
         const queryResponse = await pool.query('SELECT * from list WHERE user_id = $1 AND list_id = $2', [userId, listId]);
         if (queryResponse.rowCount === 1){
             res.status(200).send({list: queryResponse.rows[0]});
@@ -164,7 +172,7 @@ module.exports = app.get('/v1/lists/:list_id', async (req, res) => {
 // Create new list
 module.exports = app.post('/v1/list/', async (req, res) => {
     try {
-        const {email, list_name} = req.body;
+        const {list_name} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const queryResponse = await pool.query('INSERT INTO list (user_id, list_name) VALUES ($1, $2)', [userId, list_name]);
@@ -182,7 +190,7 @@ module.exports = app.post('/v1/list/', async (req, res) => {
 // Update list by list ID
 module.exports = app.patch('/v1/list/:list_id', async (req, res) => {
     try {
-        const {email, list_name} = req.body;
+        const {list_name} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.list_id;
@@ -201,7 +209,6 @@ module.exports = app.patch('/v1/list/:list_id', async (req, res) => {
 // Delete list by list ID
 module.exports = app.delete('/v1/list/:list_id', async (req, res) => {
     try {
-        const {email} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.list_id;
