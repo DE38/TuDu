@@ -24,6 +24,11 @@ module.exports = app.post('/v1/register', async (req, res) => {
         }
         try {
             await pool.query('INSERT INTO users (email, pw_hash) VALUES ($1, $2)', [email, passwd]);
+
+            // create standard List per User
+            const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+            const userId = idResponse.rows[0].user_id;
+            await pool.query('INSERT INTO list (user_id, list_name) VALUES ($1, $2)', [userId, "Standard List"])
         } catch {
             res.status(400);
             res.send({text: `this email has already been registered!`});
