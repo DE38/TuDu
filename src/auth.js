@@ -33,20 +33,6 @@ module.exports = app.post('/v1/register', async (req, res) => {
             res.status(400);
             res.send({text: `this email has already been registered!`});
         }
-        const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-            modulusLength: 4096,
-            publicKeyEncoding: {
-                type: 'spki',
-                format: 'pem'
-            },
-            privateKeyEncoding: {
-                type: 'pkcs8',
-                format: 'pem',
-                //                    cipher: 'aes-256-cbc', //TODO vllt machen wegen DB?
-                //                    passphrase: 'top secret'
-            }
-        });
-        await pool.query('UPDATE users SET private_key = $1 WHERE email = $2', [privateKey, email])
         res.status(201);
         res.send({text: `You have been registered!`});
     } catch (err) {
@@ -64,8 +50,23 @@ module.exports = app.post('/v1/login', async (req, res) => {
             res.send({text: `email or password is missing`});
         }
         const pw_hash_from_db = (await pool.query('SELECT pw_hash FROM users WHERE email = $1', [email])).rows[0].pw_hash;
-        if(bcrypt.compare(passwd, pw_hash_from_db)){
-            const privateKey =  (await pool.query('SELECT private_key FROM users WHERE email = $1', [email])).rows[0].private_key
+
+        if(await bcrypt.compare(passwd, pw_hash_from_db)){
+            const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+                modulusLength: 4096,
+                publicKeyEncoding: {
+                    type: 'spki',
+                    format: 'pem'
+                },
+                privateKeyEncoding: {
+                    type: 'pkcs8',
+                    format: 'pem',
+                    //                    cipher: 'aes-256-cbc', //TODO vllt machen wegen DB?
+                    //                    passphrase: 'top secret'
+                }
+            });
+            await pool.query('UPDATE users SET private_key = $1 WHERE email = $2', [privateKey, email])
+//            const privateKey =  (await pool.query('SELECT private_key FROM users WHERE email = $1', [email])).rows[0].private_key
             const auth = {email: {email}};
             jwt.sign({ auth }, privateKey, (err, token) => {
                 if (err) {
