@@ -108,6 +108,28 @@ module.exports = app.patch('/v1/list/:list_id/task/:task_id', async (req, res) =
     }
 })
 
+// mark Task as checked
+module.exports = app.patch('/v1/list/:list_id/task/:task_id/check', async (req, res) => {
+    try {
+        const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
+        const userId = idResponse.rows[0].user_id;
+        const taskId = req.params.task_id;
+        const listId = req.params.list_id;
+        
+        // get specified task
+        const taskStatusResponse = await pool.query('SELECT * from tasks WHERE task_id = $1 AND user_id = $2 AND list_id = $3', [taskId, userId, listId]);
+        const taskStatus = !taskStatusResponse.rows[0].iscompleted;
+        const queryResponse = await pool.query('UPDATE tasks SET isCompleted = $4 WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, taskStatus]);
+        if (queryResponse.rowCount === 1) {
+            res.status(200).send({text: `Task ${taskId} has been set to ${taskStatus}.`});
+        } else {
+            res.status(500).send({text: 'could not find a task matching this ID'});
+        }
+    } catch (err) {
+        res.status(500).send({text: err});
+    }
+})
+
 // Delete task by task and list ID
 module.exports = app.delete('/v1/list/:list_id/task/:task_id', async (req, res) => {
     try {
