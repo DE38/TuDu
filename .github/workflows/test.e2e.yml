@@ -1,6 +1,10 @@
 name: Automated API tests using Postman CLI
 
-on: push
+on:
+  push:
+      branches: [ "master" ]
+  pull_request:
+      branches: [ "master" ]
 
 jobs:
   automated-api-tests:
@@ -14,8 +18,6 @@ jobs:
         run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
         
       - uses: isbang/compose-action@v1.4.1
-      - name: Build Backend
-        run: docker compose up --build -d
         
       - name: Run API tests
         run: |
