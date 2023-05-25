@@ -91,12 +91,12 @@ module.exports = app.post('/v1/tasks/', async (req, res) => { //TODO reoccuring 
 // Update single Task by task and list ID
 module.exports = app.patch('/v1/list/:list_id/task/:task_id', async (req, res) => {
     try {
-        const {title, isCompleted, dueDate, contents, reoccuring_rule} = req.body;
+        const {title, dueDate, contents, reoccuring_rule} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const taskId = req.params.task_id;
         const listId = req.params.list_id;
-        const queryResponse = await pool.query('UPDATE tasks SET title = $4, isCompleted = $5, dueDate = $6, contents = $7, reoccuring_rule = $8 WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, title, isCompleted, dueDate, contents, reoccuring_rule]);
+        const queryResponse = await pool.query('UPDATE tasks SET title = $4, dueDate = $5, contents = $6, reoccuring_rule = $7 WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, title, dueDate, contents, reoccuring_rule]);
         if (queryResponse.rowCount===1){
             res.status(200).send({text: `The task has been updated successfully.`});
         } else {
