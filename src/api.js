@@ -73,10 +73,10 @@ module.exports = app.get('/v1/list/:list_id/task/:task_id', async (req, res) => 
 // Create new Task
 module.exports = app.post('/v1/tasks/', async (req, res) => { //TODO reoccuring rule option
     try {
-        const {title, list_id, isEditable, isCompleted, dueDate, contents} = req.body;
+        const {title, list_id, reoccuring_rule, isEditable, isCompleted, dueDate, contents} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        const queryResponse = await pool.query('INSERT INTO tasks (user_id, list_id, title, isEditable, isCompleted, dueDate, contents) VALUES ($1, $2, $3, $4, $5, $6, $7)', [userId, list_id, title, isEditable, isCompleted, dueDate, contents]);
+        const queryResponse = await pool.query('INSERT INTO tasks (user_id, list_id, title, isEditable, isCompleted, dueDate, contents, reoccuring_rule) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)', [userId, list_id, title, isEditable, isCompleted, dueDate, contents, reoccuring_rule]);
         if (queryResponse.rowCount === 1) {
             res.status(201).send({text: `A task has been created succesfully.`});
         } else {
@@ -91,12 +91,12 @@ module.exports = app.post('/v1/tasks/', async (req, res) => { //TODO reoccuring 
 // Update single Task by task and list ID
 module.exports = app.patch('/v1/list/:list_id/task/:task_id', async (req, res) => {
     try {
-        const {title, isCompleted, dueDate, contents} = req.body;
+        const {title, isCompleted, dueDate, contents, reoccuring_rule} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const taskId = req.params.task_id;
         const listId = req.params.list_id;
-        const queryResponse = await pool.query('UPDATE tasks SET title = $4, isCompleted = $5, dueDate = $6, contents = $7 WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, title, isCompleted, dueDate, contents]);
+        const queryResponse = await pool.query('UPDATE tasks SET title = $4, isCompleted = $5, dueDate = $6, contents = $7, reoccuring_rule = $8 WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, title, isCompleted, dueDate, contents, reoccuring_rule]);
         if (queryResponse.rowCount===1){
             res.status(200).send({text: `The task has been updated successfully.`});
         } else {
@@ -186,10 +186,10 @@ module.exports = app.get('/v1/list/:list_id', async (req, res) => {
 // Create new list
 module.exports = app.post('/v1/list/', async (req, res) => {
     try {
-        const {list_name} = req.body;
+        const {list_name, description} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
-        const queryResponse = await pool.query('INSERT INTO list (user_id, list_name) VALUES ($1, $2)', [userId, list_name]);
+        const queryResponse = await pool.query('INSERT INTO list (user_id, list_name, description) VALUES ($1, $2, $3)', [userId, list_name, description]);
         if (queryResponse.rowCount === 1){
             res.status(201).send({text: `list has been created`});
         } else {
@@ -204,11 +204,11 @@ module.exports = app.post('/v1/list/', async (req, res) => {
 // Update list by list ID
 module.exports = app.patch('/v1/list/:list_id', async (req, res) => {
     try {
-        const {list_name} = req.body;
+        const {list_name, description} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
         const reqId = req.params.list_id;
-        const queryResponse = await pool.query(`UPDATE list SET list_name = $1 WHERE user_id = $2 AND list_id = $3`, [list_name, userId, reqId]);
+        const queryResponse = await pool.query(`UPDATE list SET list_name = $1, description = $4 WHERE user_id = $2 AND list_id = $3`, [list_name, userId, reqId, description]);
         if (queryResponse.rowCount === 1){
             res.status(200).send({text: `list has been updated`});
         } else {
