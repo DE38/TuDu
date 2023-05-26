@@ -20,10 +20,10 @@ const pool = require("./db.js")
 const port = 8080
 
 const app = express();
+app.use(cors());
 app.use(helmet());
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use(cors());
 app.use(morgan('combined'));
 app.use(bodyParser.urlencoded({ extended: false }));
 

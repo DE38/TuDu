@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const crypto = require('crypto');
 
+const cors = require("cors");
+
+
 const pool = require("./db.js")
 
 const JWTmiddleware = require("./jwt_auth_middleware")
@@ -13,7 +16,7 @@ const JWTmiddleware = require("./jwt_auth_middleware")
 const app = express()
 
 app.use(bodyParser.json());
-
+app.use(cors())
 
 module.exports = app.post('/v1/register', async (req, res) => {
     try {
