@@ -31,7 +31,7 @@ module.exports = app.post('/v1/register', async (req, res) => {
             // create standard List per User
             const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
             const userId = idResponse.rows[0].user_id;
-            await pool.query('INSERT INTO list (user_id, list_name) VALUES ($1, $2)', [userId, "TuDu-Items"]);
+            await pool.query('INSERT INTO list (user_id, list_name, description) VALUES ($1, $2, $3)', [userId, "TuDu-Items", "This is the default list.\nYou can delete it, if you want to. Or change its name.\nMore lists can be created at the bottom of this page."]);
         } catch {
             res.status(400);
             res.send({text: `this email has already been registered!`});

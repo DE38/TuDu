@@ -69,6 +69,7 @@ const LIST = `list (
     user_id integer NOT NULL, 
     list_id serial UNIQUE, 
     list_name varchar(255) NOT NULL,
+    description varchar(255),
     PRIMARY KEY (user_id, list_id),
     CONSTRAINT link_user
         FOREIGN KEY (user_id) 
