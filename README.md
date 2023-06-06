@@ -1,5 +1,5 @@
 # TuDu
-TuDu is the newest and most advanced ToDo-List you can imagine.
+TuDu is a simple and effective ToDo-List Web App.
 
 
 # Branches
@@ -9,4 +9,4 @@ TuDu is the newest and most advanced ToDo-List you can imagine.
 
 Installing dependencies: `npm install`
 
-Starting server: `npm start`
+Build and start the server: `npm build`
