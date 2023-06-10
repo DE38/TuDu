@@ -1,26 +1,23 @@
-import createRandomItem from "./model.item";
-
 const {faker} = require('@faker-js/faker');
 
-export class List {
-    _id;
-    name;
-    items;
+class List {
+    user_id; 
+    list_id; 
+    list_name;
+    description;
 }
 
 function createRandomList() {
-    const _id = parseInt(faker.random.numeric(6))
-    const items = [];
-    let num_of_items = parseInt(faker.random.numeric(2));
-    while (num_of_items > 0) {
-        items.push(createRandomItem(_id))
-        num_of_items--;
-    }
+    const user_id = parseInt(faker.random.numeric(6));
+    const list_id = parseInt(faker.random.numeric(6));
+    const list_name = faker.word.noun();
+    const description = "Jockel";
 
     return {
-        _id,
-        name: faker.word.noun(),
-        items
+        user_id,
+        list_id,
+        list_name,
+        description
     };
 }
 

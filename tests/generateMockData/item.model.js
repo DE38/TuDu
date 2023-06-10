@@ -11,16 +11,20 @@ class Item {
     creationDate;
 }
 
-function createRandomItem(groupId) {
+const reoccuringRuleSet = ["Daily", "Weekly", "Bi-Weekly", "Monthly", "Yearly"];
+
+function createRandomItem() {
     return {
-        _id: parseInt(faker.random.numeric(6)),
-        group: groupId,
-        name: faker.word.noun(),
+        user_id: parseInt(faker.random.numeric(6)),
+        list_id: parseInt(faker.random.numeric(6)),
+        task_id: parseInt(faker.random.numeric(6)),
+        title: faker.word.noun(),
+        reoccuring_rule: reoccuringRuleSet[Math.floor(Math.random() * reoccuringRuleSet.length)],
         isEditable: true,
-        dueDate: faker.date.soon().toDateString(),
         isCompleted: false,
-        contents: "Jockel",
-        creationDate: new Date().toDateString()
+        dueDate: faker.date.soon().toDateString(),
+        creationDate: new Date().toDateString(),
+        contents: "Jockel"
     };
 }
 
