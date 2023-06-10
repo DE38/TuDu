@@ -1,0 +1,21 @@
+name: Deploy on Digitalocean
+on:
+  push:
+    branches: master
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Deploy by SSH into server
+        uses: appleboy/ssh-action@0.1.10
+        with:
+          host: ${{ secrets.DO_IP }}
+          username: ${{ secrets.DO_user }}
+          key: ${{ secrets.DO_priv_key }}
+          script: |
+            cd ./TuDu-app
+            docker compose down
+            git submodule update --recursive --remote
+            docker compose up --build -d
+            cd ..
