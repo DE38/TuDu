@@ -144,7 +144,6 @@ module.exports = app.patch('/v1/list/:list_id/task/:task_id/check', async (req, 
                     break;
                 case "Weekly":
                     newDate = oldDate.add(1, "week");
-                    console.log("hellow")
                     break;
                 case "Bi-Weekly":
                     newDate = oldDate.add(2, "week");
@@ -157,7 +156,6 @@ module.exports = app.patch('/v1/list/:list_id/task/:task_id/check', async (req, 
                     break;
             }
             newDate = newDate.format('YYYY-MM-DD');
-            console.log(newDate)
             queryResponse = await pool.query('UPDATE tasks SET (isCompleted, dueDate) = ($4, $5) WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, taskStatus, newDate]);
         }
 

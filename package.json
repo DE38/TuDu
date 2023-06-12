@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node src",
-    "test": "jest .test.js --coverage",
+    "test": "jest .test.js --coverage --silent",
     "build": "docker-compose up --build"
   },
   "repository": {

@@ -46,7 +46,6 @@ const userEmail = "test@gmail.com";
      // login test not working; probably not possible
      it('login user', async () => {
          let fakePostRegisterUser = sinon.fake((param1) => {
-             console.log(user, param1);
              if (param1 === 'SELECT pw_hash FROM users WHERE email = $1') {
                  return ({ rows: [{ user_id: 42, pw_hash: 'secret :3' }] });
              } else if (param1 === 'UPDATE users SET private_key = $1 WHERE email = $2') {
