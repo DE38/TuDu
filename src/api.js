@@ -2,6 +2,7 @@ const express = require('express')
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken")
+const dayjs = require('dayjs')
 const JWTmiddleware = require("./jwt_auth_middleware")
 
 
@@ -118,8 +119,50 @@ module.exports = app.patch('/v1/list/:list_id/task/:task_id/check', async (req, 
         
         // get specified task
         const taskStatusResponse = await pool.query('SELECT * from tasks WHERE task_id = $1 AND user_id = $2 AND list_id = $3', [taskId, userId, listId]);
-        const taskStatus = !taskStatusResponse.rows[0].iscompleted;
-        const queryResponse = await pool.query('UPDATE tasks SET isCompleted = $4 WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, taskStatus]);
+
+        //get date for repeating tasks
+        let oldDate;
+        if(!taskStatusResponse.rows[0].duedate){
+            oldDate = dayjs();
+        } else {
+            oldDate = dayjs(taskStatusResponse.rows[0].duedate.toString(), 'YYYY-MM-DDTHH:mm:ss.SSSZ')
+        }
+
+        let queryResponse;
+
+        let taskStatus;
+        const rocurring_rule = taskStatusResponse.rows[0].reoccuring_rule
+        if (!rocurring_rule) {
+            taskStatus = !taskStatusResponse.rows[0].iscompleted;
+            queryResponse = await pool.query('UPDATE tasks SET isCompleted = $4 WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, taskStatus]);
+        } else {
+            taskStatus = taskStatusResponse.rows[0].iscompleted;
+            let newDate;
+            switch (rocurring_rule.toString()){
+                case "Daily":
+                    newDate = oldDate.add(1, "day");
+                    break;
+                case "Weekly":
+                    newDate = oldDate.add(1, "week");
+                    console.log("hellow")
+                    break;
+                case "Bi-Weekly":
+                    newDate = oldDate.add(2, "week");
+                    break;
+                case "Monthly":
+                    newDate = oldDate.add(1, "month");
+                    break;
+                case "Yearly":
+                    newDate = oldDate.add(1, "year");
+                    break;
+            }
+            newDate = newDate.format('YYYY-MM-DD');
+            console.log(newDate)
+            queryResponse = await pool.query('UPDATE tasks SET (isCompleted, dueDate) = ($4, $5) WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, taskStatus, newDate]);
+        }
+
+
+
         if (queryResponse.rowCount === 1) {
             res.status(200).send({text: `Task ${taskId} has been set to ${taskStatus}.`});
         } else {
