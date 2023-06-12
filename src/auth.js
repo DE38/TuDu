@@ -64,7 +64,7 @@ module.exports = app.post('/v1/login', async (req, res) => {
                 privateKeyEncoding: {
                     type: 'pkcs8',
                     format: 'pem',
-                    //                    cipher: 'aes-256-cbc', //TODO vllt machen wegen DB?
+                    //                    cipher: 'aes-256-cbc',
                     //                    passphrase: 'top secret'
                 }
             });
@@ -79,11 +79,6 @@ module.exports = app.post('/v1/login', async (req, res) => {
                     res.send({ token });
                 }
             })
-
-//            res.status(200);
-//            res.cookie('auth_token', 'auth_test_token');
-//            res.cookie('refresh_token', 'refresh_test_token');
-//            res.json({text: `The user has been authentificated. Your Tokens are in the sent cookies.`});
         } else {
             res.status(401);
             res.send();
@@ -94,7 +89,7 @@ module.exports = app.post('/v1/login', async (req, res) => {
     }
 })
 
-module.exports = app.get('/v1/logout', JWTmiddleware, async (req, res) => { //TODO decide on what to do here
+module.exports = app.get('/v1/logout', JWTmiddleware, async (req, res) => {
     const {email} = req.body;
     try {
         await pool.query('UPDATE users SET private_key = null WHERE email = $1', [email]);
@@ -102,34 +97,5 @@ module.exports = app.get('/v1/logout', JWTmiddleware, async (req, res) => { //TO
     } catch (err) {
         console.error(err.message);
         res.status(500).send()
-    }
-})
-
-module.exports = app.post('/v1/jwttest', async (req, res) => { //TODO to be removed for final submission
-    const user = {
-        id: 123,
-        username: 'john_doe',
-        email: 'john_doe@example.com'
-    };
-
-    jwt.sign({ user }, 'secretKey', (err, token) => {
-        if (err) {
-            res.status(500).send({ error: 'Error creating JWT' });
-        } else {
-            res.send({ token });
-        }
-    });
-})
-
-module.exports = app.post('/v1/jwtecho', async  (req, res) => {
-    const {token} = req.body;
-    const decodedToken = jwt.decode(token);
-    const email = decodedToken.auth.email.email
-    const privateKey = (await pool.query('SELECT private_key FROM users WHERE email = $1', [email])).rows[0].private_key
-    try {
-        const verify_res = jwt.verify(token, privateKey)
-        res.send(verify_res)
-    } catch (e) {
-        res.status(401).send('Invalid JWT signature');
     }
 })
