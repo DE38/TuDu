@@ -43,18 +43,20 @@ const userEmail = "test@gmail.com";
          expect(fakePostRegisterUser.called).toBe(true);
      });
 
+     // login test not working; probably not possible
      it('login user', async () => {
          let fakePostRegisterUser = sinon.fake((param1) => {
+             console.log(user, param1);
              if (param1 === 'SELECT pw_hash FROM users WHERE email = $1') {
-                 return ({rows: [{user_id: 42, pw_hash: 'secret :3'}]});
+                 return ({ rows: [{ user_id: 42, pw_hash: 'secret :3' }] });
              } else if (param1 === 'UPDATE users SET private_key = $1 WHERE email = $2') {
-                 return ({rows: [{user_id: 42}]});
+                 return ({ rows: [{ user_id: 42 }] });
              } else {
                  console.log(param1)
              }
          });
 
-         let fakeCompare = sinon.fake((passwd, hash) =>{
+         let fakeCompare = sinon.fake((passwd, hash) => {
              return true;
          });
 
@@ -62,8 +64,8 @@ const userEmail = "test@gmail.com";
          sinon.replace(bcrypt, 'compare', fakeCompare);
 
          const response = await request(authApi)
-            .post('/v1/login')
-            .send({email: user.email, passwd: user.pw_hash});
+             .post('/v1/login')
+             .send({ email: user.email, passwd: user.pw_hash });
          expect(response.status).toBe(200);
          expect(fakePostRegisterUser.called).toBe(true);
      });
