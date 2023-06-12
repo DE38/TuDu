@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 //Tasks
 
 // Get all tasks by USER_ID
-module.exports = app.get('/v1/tasks/', async (req, res) => { //TODO BUG
+module.exports = app.get('/v1/tasks/', async (req, res) => {
     try {
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
         const userId = idResponse.rows[0].user_id;
@@ -39,7 +39,7 @@ module.exports = app.get('/v1/tasks/', async (req, res) => { //TODO BUG
 })
 
 // Get all tasks by LIST_ID
-module.exports = app.get('/v1/list/:list_id/tasks/', async (req, res) => { //TODO BUG
+module.exports = app.get('/v1/list/:list_id/tasks/', async (req, res) => {
     try {
         const listId = req.params.list_id;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
@@ -72,7 +72,7 @@ module.exports = app.get('/v1/list/:list_id/task/:task_id', async (req, res) => 
 })
 
 // Create new Task
-module.exports = app.post('/v1/tasks/', async (req, res) => { //TODO reoccuring rule option
+module.exports = app.post('/v1/tasks/', async (req, res) => {
     try {
         const {title, list_id, reoccuring_rule, isEditable, isCompleted, dueDate, contents} = req.body;
         const idResponse = await pool.query('SELECT user_id from users WHERE email = $1', [email]);
