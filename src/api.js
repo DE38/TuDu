@@ -131,14 +131,14 @@ module.exports = app.patch('/v1/list/:list_id/task/:task_id/check', async (req, 
         let queryResponse;
 
         let taskStatus;
-        const rocurring_rule = taskStatusResponse.rows[0].reoccuring_rule
-        if (!rocurring_rule) {
+        const reocurring_rule = taskStatusResponse.rows[0].reoccuring_rule
+        if (!reocurring_rule || reocurring_rule === null || reocurring_rule === undefined || reocurring_rule === "undefined" || reocurring_rule === "null") {
             taskStatus = !taskStatusResponse.rows[0].iscompleted;
             queryResponse = await pool.query('UPDATE tasks SET isCompleted = $4 WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, taskStatus]);
         } else {
             taskStatus = taskStatusResponse.rows[0].iscompleted;
             let newDate;
-            switch (rocurring_rule.toString()){
+            switch (reocurring_rule.toString()){
                 case "Daily":
                     newDate = oldDate.add(1, "day");
                     break;
@@ -154,7 +154,11 @@ module.exports = app.patch('/v1/list/:list_id/task/:task_id/check', async (req, 
                 case "Yearly":
                     newDate = oldDate.add(1, "year");
                     break;
+                default:
+                    taskStatus = !taskStatus;
+                    break;
             }
+            console.log(taskStatus);
             newDate = newDate.format('YYYY-MM-DD');
             queryResponse = await pool.query('UPDATE tasks SET (isCompleted, dueDate) = ($4, $5) WHERE user_id = $1 AND list_id = $2 AND task_id = $3', [userId, listId, taskId, taskStatus, newDate]);
         }
